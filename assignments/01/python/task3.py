@@ -6,7 +6,7 @@ from common import *
 
 if __name__ == "__main__":
 
-    threshold = 1  # todo: choose an appropriate value
+    threshold = 0.007  # todo: choose an appropriate value
     sigma = 1  # todo: choose an appropriate value
     filename = "../data/grid.jpg"
 

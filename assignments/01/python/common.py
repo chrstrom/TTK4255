@@ -46,19 +46,11 @@ def extract_edges(Ix, Iy, Im, threshold):
     magnitude is greater than the threshold. Also, returns
     the angle of the image gradient at each extracted edge.
     """
-
     magnitude_image_filtered = Im > threshold
     detection_indicies = np.nonzero(magnitude_image_filtered)
-    x_out = []
-    y_out = []
-    theta_out = []
-    for y in range(magnitude_image_filtered.shape[0]):
-        for x in range(magnitude_image_filtered.shape[1]):
-            if magnitude_image_filtered[y, x]:
-                x_out.append(x)
-                y_out.append(y)
-                theta_out.append(np.arctan2(Iy[y,x], Ix[y,x]))
 
+    y = detection_indicies[0]
+    x = detection_indicies[1]
+    theta = np.arctan2(Iy[y,x], Ix[y,x])
 
-   #return x, y, theta
-    return x_out, y_out, theta_out
+    return x, y, theta 
