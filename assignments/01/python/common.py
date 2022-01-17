@@ -1,4 +1,5 @@
 import numpy as np
+from scipy import ndimage
 
 def rgb_to_gray(I):
     """
@@ -8,7 +9,8 @@ def rgb_to_gray(I):
     R = I[:,:,0]
     G = I[:,:,1]
     B = I[:,:,2]
-    return G # Placeholder
+
+    return (R + G + B) / 3.0
 
 def central_difference(I):
     """
@@ -16,10 +18,11 @@ def central_difference(I):
     a central difference filter, and returns the resulting
     gradient images (Ix, Iy) and the gradient magnitude Im.
     """
-
-    Ix = np.zeros_like(I) # Placeholder
-    Iy = np.zeros_like(I) # Placeholder
-    Im = np.zeros_like(I) # Placeholder
+    kernel = np.array([0.5, 0, -0.5])
+    Ix = ndimage.convolve1d(I, kernel, axis=1)
+    Iy = ndimage.convolve1d(I, kernel, axis=0)
+    # TODO: Implement without convolution functions as an exercise
+    Im = np.sqrt(Ix**2 + Iy**2)
     return Ix, Iy, Im
 
 def gaussian(I, sigma):
@@ -27,13 +30,15 @@ def gaussian(I, sigma):
     Applies a 2-D Gaussian blur with standard deviation sigma to
     a grayscale image I.
     """
+    kernel_width = int(2*np.ceil(3*sigma) + 1)
+ 
+    kernel = [1/(2*np.pi*sigma**2)*np.exp(-x**2 / (2*sigma**2)) 
+        for x in range(-kernel_width//2, kernel_width//2)]
 
-    # Hint: The size of the kernel should depend on sigma. A common
-    # choice is to make the half-width be 3 standard deviations. The
-    # total kernel width is then 2*np.ceil(3*sigma) + 1.
-
-    result = np.zeros_like(I) # Placeholder
-    return result
+    # TODO: Implement without convolution functions as an exercise
+    horizontal_pass = ndimage.convolve1d(I, kernel, axis=1)
+    vertical_pass = ndimage.convolve1d(horizontal_pass, kernel, axis=0)
+    return vertical_pass
 
 def extract_edges(Ix, Iy, Im, threshold):
     """
@@ -42,4 +47,18 @@ def extract_edges(Ix, Iy, Im, threshold):
     the angle of the image gradient at each extracted edge.
     """
 
-    return [0,0,0] # Placeholder
+    magnitude_image_filtered = Im > threshold
+    detection_indicies = np.nonzero(magnitude_image_filtered)
+    x_out = []
+    y_out = []
+    theta_out = []
+    for y in range(magnitude_image_filtered.shape[0]):
+        for x in range(magnitude_image_filtered.shape[1]):
+            if magnitude_image_filtered[y, x]:
+                x_out.append(x)
+                y_out.append(y)
+                theta_out.append(np.arctan2(Iy[y,x], Ix[y,x]))
+
+
+   #return x, y, theta
+    return x_out, y_out, theta_out
