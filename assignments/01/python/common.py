@@ -14,13 +14,13 @@ def rgb_to_gray(I):
     return (R + G + B) / 3.0
 
 
-def central_difference(I):
+def central_difference(I, diff):
     """
     Computes the gradient in the x and y direction using
     a central difference filter, and returns the resulting
     gradient images (Ix, Iy) and the gradient magnitude Im.
     """
-    kernel = np.array([0.5, 0, -0.5])
+    kernel = np.array([-diff, 0, diff])
     Ix = ndimage.convolve1d(I, kernel, axis=1)
     Iy = ndimage.convolve1d(I, kernel, axis=0)
     # TODO: Implement without convolution functions as an exercise
