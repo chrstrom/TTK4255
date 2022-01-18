@@ -92,7 +92,6 @@ def rgb_normalized_threshold_on_green(image_in, threshold):
 
 if __name__ == "__main__":
     threshold = 0.45
-    sigma = 1  # todo: choose an appropriate value
     filename = "../data/grass.jpg"
 
     image_rgb = plt.imread(filename)
