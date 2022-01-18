@@ -8,14 +8,14 @@ if __name__ == "__main__":
 
     threshold = 0.007  # todo: choose an appropriate value
     sigma = 1.2  # todo: choose an appropriate value
-    central_difference = 0.5
+    central_difference_scalar = 0.5
     filename = "../data/grid.jpg"
 
     I_rgb = plt.imread(filename)
     I_rgb = I_rgb / 255.0
     I_gray = rgb_to_gray(I_rgb)
     I_blur = gaussian(I_gray, sigma)
-    Ix, Iy, Im = central_difference(I_blur, central_difference)
+    Ix, Iy, Im = central_difference(I_blur, central_difference_scalar)
     x, y, theta = extract_edges(Ix, Iy, Im, threshold)
 
     fig, axes = plt.subplots(1, 5, figsize=[15, 4], sharey="row")
