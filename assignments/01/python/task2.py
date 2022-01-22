@@ -11,8 +11,11 @@ def rgb_split_channels(image_in):
     Task 2.2
     """
     _ , ax = plt.subplots(1, 4, sharey="row")
+    plt.set_cmap("gray")
+
+    image_shape = image_in.shape
     ax[0].imshow(image_in)
-    ax[0].set_title("Normal image")
+    ax[0].set_title(f"Grass.jpg. W: {image_shape[1]}, H: {image_shape[0]}")
 
     ax[1].imshow(image_in[:, :, 0])
     ax[1].set_title("Channel 0")
@@ -91,14 +94,16 @@ def rgb_normalized_threshold_on_green(image_in, threshold):
 
 
 if __name__ == "__main__":
-    threshold = 0.45
+    threshold = 0.4
     filename = "../data/grass.jpg"
 
     image_rgb = plt.imread(filename)
     image_rgb = image_rgb / 255.0
 
-    rgb_split_channels(image_rgb)
+    # rgb_split_channels(image_rgb)
+    i_out = rgb_normalized_values(image_rgb)
+    rgb_split_channels(i_out)
 
-    rgb_naive_threshold_on_green(image_rgb, threshold)
+    # rgb_naive_threshold_on_green(image_rgb, threshold)
 
     rgb_normalized_threshold_on_green(image_rgb, threshold)
