@@ -7,7 +7,7 @@ from common import *
 if __name__ == "__main__":
 
     threshold = 0.007  # todo: choose an appropriate value
-    sigma = 1.2  # todo: choose an appropriate value
+    sigma = 0.1  # todo: choose an appropriate value
     central_difference_scalar = 0.5
     filename = "../data/grid.jpg"
 
@@ -32,11 +32,11 @@ if __name__ == "__main__":
         a.set_xlim([300, 600])
         a.set_ylim([I_rgb.shape[0], 0])
         a.set_aspect("equal")
-    axes[0].set_title("Blurred input")
+    axes[0].set_title(f"Blurred input with sigma = {sigma}")
     axes[1].set_title("Gradient in x")
     axes[2].set_title("Gradient in y")
     axes[3].set_title("Gradient magnitude")
-    axes[4].set_title("Extracted edges")
+    axes[4].set_title(f"Extracted edges with threshold = {threshold} \n and central difference scalar = {central_difference_scalar}")
     plt.tight_layout()
     # plt.savefig('out_edges.png') # Uncomment to save figure to working directory
     plt.show()
