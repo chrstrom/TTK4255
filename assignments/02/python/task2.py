@@ -18,8 +18,8 @@ x, y, theta = extract_edges(Ix, Iy, Im, edge_threshold)
 
 # You can adjust these for better results
 line_threshold = 0.175
-N_rho = 600
-N_theta = 600
+N_rho = 400
+N_theta = 400
 
 ###########################################
 #
@@ -30,9 +30,9 @@ Ny, Nx, _ = I_rgb.shape
 print(f"image shape: y:{Ny} x:{Nx}")
 
 rho_max = np.sqrt(Ny ** 2 + Nx ** 2)
-rho_min = 0
-theta_min = -np.pi / 2
-theta_max = 3 * np.pi / 2
+rho_min = -rho_max
+theta_min = np.pi
+theta_max = -theta_min
 
 ###########################################
 #
@@ -42,17 +42,13 @@ theta_max = 3 * np.pi / 2
 # Zero-initialize an array to hold our votes
 H = np.zeros((N_rho, N_theta))
 
-row_from_rho = lambda rho: int(
-    np.floor(N_rho * (rho - rho_min) / ((rho_max - rho_min)))
-)
-col_from_theta = lambda theta: int(
-    np.floor(N_theta * (theta - theta_min) / ((theta_max - theta_min)))
-)
-
 rho = x * np.cos(theta) + y * np.sin(theta)
-for angle, rho in zip(theta, rho):
-    row = row_from_rho(rho)
-    col = col_from_theta(angle)
+rows_from_rho = np.floor(N_rho * (rho - rho_min) / ((rho_max - rho_min))).astype(int)
+cols_from_theta = np.floor(
+    N_theta * (theta - theta_min) / ((theta_max - theta_min))
+).astype(int)
+
+for row, col in zip(rows_from_rho, cols_from_theta):
     H[row, col] += 1
 
 ###########################################
@@ -62,16 +58,10 @@ for angle, rho in zip(theta, rho):
 ###########################################
 H_max_x, H_max_y = extract_local_maxima(H, line_threshold)
 
-rho_from_row = lambda row: float((row * (rho_max - rho_min) / N_rho))
-theta_from_col = lambda col: float(col * (theta_max - theta_min) / N_theta + theta_min)
-
 # 2) Convert (row, column) back to (rho, theta)r
+maxima_rho = (H_max_x * (rho_max - rho_min) / N_rho + rho_min).astype(float)
+maxima_theta = (H_max_y * (theta_max - theta_min) / N_theta + theta_min).astype(float)
 
-maxima_theta = []
-maxima_rho = []
-for x, y in zip(H_max_x, H_max_y):
-    maxima_theta.append(theta_from_col(y))
-    maxima_rho.append(rho_from_row(x))
 ###########################################
 #
 # Figure 2.2: Display the accumulator array and local maxima
