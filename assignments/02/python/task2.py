@@ -9,28 +9,30 @@ edge_threshold = 0.015
 blur_sigma = 1
 filename = "../data/grid.jpg"
 I_rgb = plt.imread(filename)
-I_rgb = im2double(I_rgb)  # Ensures that the image is in floating-point with pixel values in [0,1].
+I_rgb = im2double(
+    I_rgb
+)  # Ensures that the image is in floating-point with pixel values in [0,1].
 I_gray = rgb_to_gray(I_rgb)
 Ix, Iy, Im = derivative_of_gaussian(I_gray, sigma=blur_sigma)  # See HW1 Task 3.6
 x, y, theta = extract_edges(Ix, Iy, Im, edge_threshold)
 
 # You can adjust these for better results
-line_threshold = 0.2
-N_rho = 200
-N_theta = 200
+line_threshold = 0.175
+N_rho = 600
+N_theta = 600
 
 ###########################################
 #
 # Task 2.1: Determine appropriate ranges
 #
 ###########################################
-# Tip: theta is computed using np.arctan2. Check that the
-# range of values returned by arctan2 matches your chosen
-# ranges (check np.info(np.arctan2) or the internet docs).
-rho_max = 500  # Placeholder value
-rho_min = -100  # Placeholder value
-theta_min = -1  # Placeholder value
-theta_max = +1  # Placeholder value
+Ny, Nx, _ = I_rgb.shape
+print(f"image shape: y:{Ny} x:{Nx}")
+
+rho_max = np.sqrt(Ny ** 2 + Nx ** 2)
+rho_min = 0
+theta_min = -np.pi / 2
+theta_max = 3 * np.pi / 2
 
 ###########################################
 #
@@ -40,27 +42,36 @@ theta_max = +1  # Placeholder value
 # Zero-initialize an array to hold our votes
 H = np.zeros((N_rho, N_theta))
 
-# 1) Compute rho for each edge (x,y,theta)
-# Tip: You can do this without for-loops
+row_from_rho = lambda rho: int(
+    np.floor(N_rho * (rho - rho_min) / ((rho_max - rho_min)))
+)
+col_from_theta = lambda theta: int(
+    np.floor(N_theta * (theta - theta_min) / ((theta_max - theta_min)))
+)
 
-# 2) Convert to discrete row,column coordinates
-# Tip: Use np.floor(...).astype(np.int) to floor a number to an integer type
-
-# 3) Increment H[row,column]
-# Tip: Make sure that you don't try to access values at indices outside
-# the valid range: [0,N_rho-1] and [0,N_theta-1]
+rho = x * np.cos(theta) + y * np.sin(theta)
+for angle, rho in zip(theta, rho):
+    row = row_from_rho(rho)
+    col = col_from_theta(angle)
+    H[row, col] += 1
 
 ###########################################
 #
 # Task 2.3: Extract local maxima
 #
 ###########################################
-# 1) Call extract_local_maxima
+H_max_x, H_max_y = extract_local_maxima(H, line_threshold)
 
-# 2) Convert (row, column) back to (rho, theta)
-maxima_rho = [100]  # Placeholder
-maxima_theta = [0]  # Placeholder
+rho_from_row = lambda row: float((row * (rho_max - rho_min) / N_rho))
+theta_from_col = lambda col: float(col * (theta_max - theta_min) / N_theta + theta_min)
 
+# 2) Convert (row, column) back to (rho, theta)r
+
+maxima_theta = []
+maxima_rho = []
+for x, y in zip(H_max_x, H_max_y):
+    maxima_theta.append(theta_from_col(y))
+    maxima_rho.append(rho_from_row(x))
 ###########################################
 #
 # Figure 2.2: Display the accumulator array and local maxima
