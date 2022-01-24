@@ -21,11 +21,7 @@ line_threshold = 0.175
 N_rho = 400
 N_theta = 400
 
-###########################################
-#
 # Task 2.1: Determine appropriate ranges
-#
-###########################################
 Ny, Nx, _ = I_rgb.shape
 print(f"image shape: y:{Ny} x:{Nx}")
 
@@ -34,12 +30,7 @@ rho_min = -rho_max
 theta_min = np.pi
 theta_max = -theta_min
 
-###########################################
-#
 # Task 2.2: Compute the accumulator array
-#
-###########################################
-# Zero-initialize an array to hold our votes
 H = np.zeros((N_rho, N_theta))
 
 rho = x * np.cos(theta) + y * np.sin(theta)
@@ -51,22 +42,14 @@ cols_from_theta = np.floor(
 for row, col in zip(rows_from_rho, cols_from_theta):
     H[row, col] += 1
 
-###########################################
-#
 # Task 2.3: Extract local maxima
-#
-###########################################
 H_max_x, H_max_y = extract_local_maxima(H, line_threshold)
 
 # 2) Convert (row, column) back to (rho, theta)r
 maxima_rho = (H_max_x * (rho_max - rho_min) / N_rho + rho_min).astype(float)
 maxima_theta = (H_max_y * (theta_max - theta_min) / N_theta + theta_min).astype(float)
 
-###########################################
-#
 # Figure 2.2: Display the accumulator array and local maxima
-#
-###########################################
 plt.figure()
 plt.imshow(H, extent=[theta_min, theta_max, rho_max, rho_min], aspect="auto")
 plt.colorbar(label="Votes")
@@ -76,11 +59,7 @@ plt.xlabel("$\\theta$ (radians)")
 plt.ylabel("$\\rho$ (pixels)")
 # plt.savefig('out_array.png', bbox_inches='tight', pad_inches=0) # Uncomment to save figure
 
-###########################################
-#
 # Figure 2.3: Draw the lines back onto the input image
-#
-###########################################
 plt.figure()
 plt.imshow(I_rgb)
 plt.xlim([0, I_rgb.shape[1]])
