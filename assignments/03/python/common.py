@@ -4,35 +4,26 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def translate_xyz(x = 0, y = 0, z = 0):
-    return np.array([[1, 0, 0, x],
-                     [0, 1, 0, y],
-                     [0, 0, 1, z],
-                     [0, 0, 0, 1]])
+def translate_xyz(x=0, y=0, z=0):
+    return np.array([[1, 0, 0, x], [0, 1, 0, y], [0, 0, 1, z], [0, 0, 0, 1]])
+
 
 def rotate_x(rad):
     c = np.cos(rad)
     s = np.sin(rad)
-    return np.array([[1, 0,  0, 0],
-                     [0, c, -s, 0],
-                     [0, s,  c, 0],
-                     [0, 0,  0, 1]])
+    return np.array([[1, 0, 0, 0], [0, c, -s, 0], [0, s, c, 0], [0, 0, 0, 1]])
+
 
 def rotate_y(rad):
     c = np.cos(rad)
     s = np.sin(rad)
-    return np.array([[ c, 0, s, 0],
-                     [ 0, 1, 0, 0],
-                     [-s, 0, c, 0],
-                     [ 0, 0, 0, 1]])
+    return np.array([[c, 0, s, 0], [0, 1, 0, 0], [-s, 0, c, 0], [0, 0, 0, 1]])
+
 
 def rotate_z(rad):
     c = np.cos(rad)
     s = np.sin(rad)
-    return np.array([[c, -s, 0, 0],
-                     [s,  c, 0, 0],
-                     [0,  0, 1, 0],
-                     [0,  0, 0, 1]])
+    return np.array([[c, -s, 0, 0], [s, c, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
 
 
 def project(K, X):
@@ -63,12 +54,12 @@ def draw_frame(K, T, scale=1):
     This uses your project function, so implement it first.
     Control the length of the axes using 'scale'.
     """
-    X = T @ np.array([
-        [0,scale,0,0],
-        [0,0,scale,0],
-        [0,0,0,scale],
-        [1,1,1,1]])
-    u,v = project(K, X) # If you get an error message here, you should modify your project function to accept 4xN arrays of homogeneous vectors, instead of 3xN.
-    plt.plot([u[0], u[1]], [v[0], v[1]], color='red') # X-axis
-    plt.plot([u[0], u[2]], [v[0], v[2]], color='green') # Y-axis
-    plt.plot([u[0], u[3]], [v[0], v[3]], color='blue') # Z-axis
+    X = T @ np.array(
+        [[0, scale, 0, 0], [0, 0, scale, 0], [0, 0, 0, scale], [1, 1, 1, 1]]
+    )
+    u, v = project(
+        K, X
+    )  # If you get an error message here, you should modify your project function to accept 4xN arrays of homogeneous vectors, instead of 3xN.
+    plt.plot([u[0], u[1]], [v[0], v[1]], color="red")  # X-axis
+    plt.plot([u[0], u[2]], [v[0], v[2]], color="green")  # Y-axis
+    plt.plot([u[0], u[3]], [v[0], v[3]], color="blue")  # Z-axis

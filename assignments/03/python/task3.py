@@ -4,24 +4,23 @@ import numpy as np
 import matplotlib.pyplot as plt
 from common import *
 
-K = np.loadtxt('../data/task2K.txt')
-X_o = np.loadtxt('../data/task3points.txt')
+K = np.loadtxt("../data/task2K.txt")
+X_o = np.loadtxt("../data/task3points.txt")
 
 T_co = translate_xyz(z=6) @ rotate_x(np.deg2rad(15)) @ rotate_y(np.deg2rad(45))
-X_c = T_co@X_o
+X_c = T_co @ X_o
 
 u, v = project(K, X_c)
 
 width, height = 600, 400
 
-plt.figure(figsize=(4,3))
-plt.scatter(u, v, c='black', marker='.', s=20)
+plt.figure(figsize=(4, 3))
+plt.scatter(u, v, c="black", marker=".", s=20)
 
 draw_frame(K, T_co)
 
-plt.axis('image')     # This option ensures that pixels are square in the figure (preserves aspect ratio)
-                      # This must be called BEFORE setting xlim and ylim!
+plt.axis("image")
 plt.xlim([0, width])
-plt.ylim([height, 0]) # The reversed order flips the figure such that the y-axis points down
-#plt.savefig('plots/task3-2.png', bbox_inches='tight', pad_inches=0) # Uncomment to save figure
+plt.ylim([height, 0])
+# plt.savefig('plots/task3-2.png', bbox_inches='tight', pad_inches=0) # Uncomment to save figure
 plt.show()
