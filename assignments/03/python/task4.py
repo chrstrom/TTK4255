@@ -35,22 +35,42 @@ X_p = np.c_[x0, x1, x2, x3].reshape(4, 4)
 X_c = T_from_platform_to_camera @ X_p
 u, v = project(K, X_c)
 
-T_from_base_to_platform = T_from_platform_to_camera @ translate_xyz(x=d/2, y=d/2) @ rotate_z(psi) # 4.3
-T_from_hinge_to_base = T_from_base_to_platform @ translate_xyz(z=0.325) @ rotate_y(theta) # 4.4
-T_from_arm_to_hinge = T_from_hinge_to_base @ translate_xyz(z=-0.05) # 4.5
-T_from_rotors_to_arm = T_from_arm_to_hinge @ translate_xyz(x=0.65, z=-0.03) @ rotate_z(phi) # 4.6
+# 4.3
+T_from_base_to_camera = (
+    T_from_platform_to_camera @ translate_xyz(x=d / 2, y=d / 2) @ rotate_z(psi)
+)
 
-marker_points = np.loadtxt("../data/heli_K.txt")
+# 4.4
+T_from_hinge_to_camera = (
+    T_from_base_to_camera @ translate_xyz(z=0.325) @ rotate_y(theta)
+)
+
+# 4.5
+T_from_arm_to_camera = T_from_hinge_to_camera @ translate_xyz(z=-0.05)
+
+# 4.6
+T_from_rotors_to_camera = (
+    T_from_arm_to_camera @ translate_xyz(x=0.65, z=-0.03) @ rotate_z(phi)
+)
+
+# 4.7
+marker_points = np.loadtxt("../data/heli_points.txt")
+markers_in_arm_frame = marker_points[:3, :]
+markers_in_rotor_frame = marker_points[3:, :]
+
+u_arm, v_arm = project(K, T_from_arm_to_camera @ markers_in_arm_frame.T)
+u_rotor, v_rotor = project(K, T_from_rotors_to_camera @ markers_in_rotor_frame.T)
 
 plt.figure()
 plt.imshow(helicopter_image)
 draw_frame(K, T_from_platform_to_camera, scale=axis_scale)
-draw_frame(K, T_from_base_to_platform, scale=axis_scale)
-draw_frame(K, T_from_hinge_to_base, scale=axis_scale)
-draw_frame(K, T_from_arm_to_hinge, scale=axis_scale)
-draw_frame(K, T_from_rotors_to_arm, scale=axis_scale)
+draw_frame(K, T_from_base_to_camera, scale=axis_scale)
+draw_frame(K, T_from_hinge_to_camera, scale=axis_scale)
+draw_frame(K, T_from_arm_to_camera, scale=axis_scale)
+draw_frame(K, T_from_rotors_to_camera, scale=axis_scale)
 plt.scatter(u, v, c="yellow", marker="x", s=100)
-
-#plt.xlim([200, 500])
-#plt.ylim([600, 400])
+plt.scatter(u_arm, v_arm, c="yellow", marker=".", s=100)
+plt.scatter(u_rotor, v_rotor, c="yellow", marker=".", s=100)
+# plt.xlim([200, 500])
+# plt.ylim([600, 400])
 plt.show()
