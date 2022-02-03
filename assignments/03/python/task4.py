@@ -1,7 +1,4 @@
 #!/usr/bin/python3
-
-from fnmatch import translate
-from turtle import xcor
 import numpy as np
 import matplotlib.pyplot as plt
 import common as cm
