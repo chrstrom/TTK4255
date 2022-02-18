@@ -12,9 +12,21 @@ def estimate_H(xy, XY):
     # ordered by decreasing magnitude. However, note that it returns
     # V transposed.
 
-    n = XY.shape[1]
+    n = XY.shape[0]
+    A = np.zeros((2*n, 9))
+    for i in range(n):
+        Xi = XY[i, 0]
+        Yi = XY[i, 1]
+        xi = xy[i, 0]
+        yi = xy[i, 1]
+        A[2*i, :] = [Xi, Yi, 1, 0, 0, 0, -Xi*xi, -Yi*xi, -xi]
+        A[2*i + 1, :] = [0, 0, 0, Xi, Yi, 1, -Xi*yi, -Yi*yi, -yi]
 
-    H = np.eye(3)  # Placeholder, replace with your implementation
+    _, _, VT = np.linalg.svd(A)
+    V = VT.T
+
+    h = V[:,-1]
+    H = np.reshape(h, (3, 3))
     return H
 
 
