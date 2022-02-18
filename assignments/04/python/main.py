@@ -11,8 +11,8 @@ n_total = XY.shape[1]  # Total number of markers (= 24)
 
 fig = plt.figure(figsize=plt.figaspect(0.35))
 
-# for image_number in range(23): # Use this to run on all images
-for image_number in [4]:  # Use this to run on a single image
+for image_number in range(23): # Use this to run on all images
+#for image_number in [4]:  # Use this to run on a single image
     #  n : Number of successfully detected markers (<= n_total)
     # uv : Pixel coordinates of successfully detected markers
     valid = detections[image_number, 0::3] == True
@@ -39,7 +39,7 @@ for image_number in [4]:  # Use this to run on a single image
     u_predicted = u_tilde_predicted / u_tilde_predicted[2,:]
     u_predicted = u_predicted[:2, :]
 
-    error = np.linalg.norm(uv - u_predicted, axis=0)
+    error = np.linalg.norm(uv - u_predicted[:, valid], axis=0)
 
     print(f"For image {image_number}:")
     print(f"e_min: {np.min(error)}")
@@ -47,9 +47,10 @@ for image_number in [4]:  # Use this to run on a single image
     print(f"e_avg: {np.mean(error)}")
     print("")
 
-    T1, T2 = decompose_H(H) # TASK: Implement this function
+    T1, T2 = decompose_H(H, use_closest=True) # TASK: Implement this function
 
-    T = T1  # TASK: Choose solution (try both T1 and T2 for Task 3.1, but choose automatically for Task 3.2)
+    translation_z = T1[2, 3]
+    T = T1 if translation_z > 0 else T2
 
     # The figure should be saved in the data directory as out0000.png, etc.
     # NB! generate_figure expects the predicted pixel coordinates as 'uv_from_H'.

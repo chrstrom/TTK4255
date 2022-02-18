@@ -30,16 +30,40 @@ def estimate_H(xy, XY):
     return H
 
 
-def decompose_H(H):
+def decompose_H(H, use_closest=False):
     # Tip: Use np.linalg.norm to compute the Euclidean length
 
-    T1 = np.eye(4)  # Placeholder, replace with your implementation
-    T2 = np.eye(4)  # Placeholder, replace with your implementation
+    def calculate_T(H, k):
+        r1 = H[:, 0] / k
+        r2 = H[:, 1] / k
+        r3 = np.cross(r1, r2)
+        t = H[:, 2] / k
+
+        T = np.eye(4)
+        T[:3, :4] = np.column_stack((r1, r2, r3, t))
+
+        if use_closest:
+            T[:3, :3] = closest_rotation_matrix(np.column_stack((r1, r2, r3)))
+        return T
+
+    abs_k = np.linalg.norm(H[:, 0])
+    T1 = calculate_T(H, abs_k)
+    T2 = calculate_T(H, -abs_k)
+
     return T1, T2
 
 
 def closest_rotation_matrix(Q):
-    R = Q  # Placeholder
+    U, S, VT = np.linalg.svd(Q)
+    R = U@VT
+    # S will be the "residual" that we are removing when finding the closest
+    # rotation matrix. taking the mean value of the entries of S yields a
+    # quantity that can be used to quantify how well the properties fit
+    # the closer to 1 the better.
+    # The determinants of R and Q can also be used for this measure, since
+    # det(R) - det(Q) = mean(S) - 1
+    # print(np.linalg.det(R) - np.linalg.det(Q))
+    # print(np.mean(S))
     return R
 
 
