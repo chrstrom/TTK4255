@@ -37,8 +37,17 @@ for image_number in [4]:  # Use this to run on a single image
     u_tilde_predicted = K @ x_tilde_predicted
     
     u_predicted = u_tilde_predicted / u_tilde_predicted[2,:]
-    
-    T1,T2 = decompose_H(H) # TASK: Implement this function
+    u_predicted = u_predicted[:2, :]
+
+    error = np.linalg.norm(uv - u_predicted, axis=0)
+
+    print(f"For image {image_number}:")
+    print(f"e_min: {np.min(error)}")
+    print(f"e_max: {np.max(error)}")
+    print(f"e_avg: {np.mean(error)}")
+    print("")
+
+    T1, T2 = decompose_H(H) # TASK: Implement this function
 
     T = T1  # TASK: Choose solution (try both T1 and T2 for Task 3.1, but choose automatically for Task 3.2)
 
