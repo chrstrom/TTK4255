@@ -4,15 +4,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 from common import *
 
-K           = np.loadtxt('../data/K.txt')
-detections  = np.loadtxt('../data/detections.txt')
-XY          = np.loadtxt('../data/XY.txt').T
-n_total     = XY.shape[1] # Total number of markers (= 24)
+K = np.loadtxt("../data/K.txt")
+detections = np.loadtxt("../data/detections.txt")
+XY = np.loadtxt("../data/XY.txt").T
+n_total = XY.shape[1]  # Total number of markers (= 24)
 
 fig = plt.figure(figsize=plt.figaspect(0.35))
 
 # for image_number in range(23): # Use this to run on all images
-for image_number in [4]: # Use this to run on a single image
+for image_number in [4]:  # Use this to run on a single image
 
     # Load data
     # valid : Boolean mask where valid[i] is True if marker i was detected
@@ -33,16 +33,18 @@ for image_number in [4]: # Use this to run on a single image
     # XY1 = np.vstack((XY, np.ones(n_total)))
     # XY01 = np.vstack((XY, np.zeros(n_total), np.ones(n_total)))
 
-    xy = np.zeros((2, n))              # TASK: Compute calibrated image coordinates
-    H = estimate_H(xy, XY[:, valid])   # TASK: Implement this function
-    uv_from_H = np.zeros((2, n_total)) # TASK: Compute predicted pixel coordinates using H
+    xy = np.zeros((2, n))  # TASK: Compute calibrated image coordinates
+    H = estimate_H(xy, XY[:, valid])  # TASK: Implement this function
+    uv_from_H = np.zeros(
+        (2, n_total)
+    )  # TASK: Compute predicted pixel coordinates using H
 
-    T1,T2 = decompose_H(H) # TASK: Implement this function
+    T1, T2 = decompose_H(H)  # TASK: Implement this function
 
-    T = T1 # TASK: Choose solution (try both T1 and T2 for Task 3.1, but choose automatically for Task 3.2)
+    T = T1  # TASK: Choose solution (try both T1 and T2 for Task 3.1, but choose automatically for Task 3.2)
 
     # The figure should be saved in the data directory as out0000.png, etc.
     # NB! generate_figure expects the predicted pixel coordinates as 'uv_from_H'.
     plt.clf()
     generate_figure(fig, image_number, K, T, uv, uv_from_H, XY)
-    plt.savefig('../data/out%04d.png' % image_number)
+    plt.savefig("../data/out%04d.png" % image_number)
