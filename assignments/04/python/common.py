@@ -56,14 +56,6 @@ def decompose_H(H, use_closest=False):
 def closest_rotation_matrix(Q):
     U, S, VT = np.linalg.svd(Q)
     R = U@VT
-    # S will be the "residual" that we are removing when finding the closest
-    # rotation matrix. taking the mean value of the entries of S yields a
-    # quantity that can be used to quantify how well the properties fit
-    # the closer to 1 the better.
-    # The determinants of R and Q can also be used for this measure, since
-    # det(R) - det(Q) = mean(S) - 1
-    # print(np.linalg.det(R) - np.linalg.det(Q))
-    # print(np.mean(S))
     return R
 
 

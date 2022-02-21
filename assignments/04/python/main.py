@@ -45,12 +45,22 @@ for image_number in range(23): # Use this to run on all images
     print(f"e_min: {np.min(error)}")
     print(f"e_max: {np.max(error)}")
     print(f"e_avg: {np.mean(error)}")
-    print("")
 
-    T1, T2 = decompose_H(H, use_closest=True) # TASK: Implement this function
+    
+    use_closest = True
+
+    T1, T2 = decompose_H(H, use_closest)
 
     translation_z = T1[2, 3]
     T = T1 if translation_z > 0 else T2
+
+    if use_closest:
+        print("|1 - det(R)| for image 4 WITH corrections: {}".format(np.abs(1 - np.linalg.det(T[:3, :3]))))
+    else:
+        print("|1 - det(R)| for image 4 WITHOUT corrections: {}".format(np.abs(1 - np.linalg.det(T[:3, :3]))))
+
+    print("")
+
 
     # The figure should be saved in the data directory as out0000.png, etc.
     # NB! generate_figure expects the predicted pixel coordinates as 'uv_from_H'.
