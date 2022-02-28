@@ -13,8 +13,8 @@ epsilon = 1e-6                 # Finite-difference epsilon
 # Comment out these two lines after testing your implementation
 # of the "residuals" method.
 #
-image_number = 0
-p0 = np.array([11.6, 28.9, 0.0])*np.pi/180
+#image_number = 0
+#p0 = np.array([11.6, 28.9, 0.0])*np.pi/180
 
 # Tip:
 # Here, "uv" is a 2x7 array of detected marker locations.
@@ -49,7 +49,7 @@ if image_number == 0:
     print(resfun(p0))
     quit()
 
-p = gauss_newton(resfun=resfun, jacfun=jacfun, p0=p0, step_size=step_size, num_steps=num_steps)
+p = gauss_newton(resfun=resfun, jacfun=jacfun, p0=p0, step_size=step_size, num_steps=num_steps, xtol=0.01)
 
 # Calculate and print the reprojection errors at the optimum
 r = resfun(p).reshape((2,-1))
@@ -62,5 +62,5 @@ print('Median:   %5.02f px' % np.median(e))
 
 # Visualize the frames and marker points
 quanser.draw(uv, weights, image_number)
-plt.savefig('out_part1a.png')
+#plt.savefig('out_part1a.png')
 plt.show()

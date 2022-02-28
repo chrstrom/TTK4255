@@ -25,17 +25,19 @@ class Quanser:
         uv_hat = project(self.K, np.hstack([p1, p2]))
         self.uv_hat = uv_hat # Save for use in draw()
 
-        #
-        # TASK: Compute the vector of residuals.
-        #
-        # Tip: Use np.hstack to concatenate the horizontal and vertical residual components
-        # into a single 1D array. Note: The plotting code will not work correctly if you use
-        # a different ordering.
-        r = np.zeros(2*7) # Placeholder, remove me!
+        N = uv.shape[0]
+        M = uv.shape[1]
+        r = np.zeros(N*M)
+        for i in range(M):
+            r[i] = weights[i] * (uv_hat[0, i] - uv[0, i])
+            r[i+M] = weights[i] * (uv_hat[1, i] - uv[1, i])
+
+
+
         return r
 
     def draw(self, uv, weights, image_number):
-        I = plt.imread('../data/video%04d.jpg' % image_number)
+        I = plt.imread('../data/img_sequence/video%04d.jpg' % image_number)
         plt.imshow(I)
         plt.scatter(*uv[:, weights == 1], linewidths=1, edgecolor='black', color='white', s=80, label='Observed')
         plt.scatter(*self.uv_hat, color='red', label='Predicted', s=10)
