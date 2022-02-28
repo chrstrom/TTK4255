@@ -92,6 +92,6 @@ plt.ylim([600, 350])
 # plt.ylim([I.shape[0], 0])
 
 # Tip: To save the figure:
-#plt.savefig('out_part2.1_b.png')
+plt.savefig('out_part2.2.png')
 
 plt.show()
