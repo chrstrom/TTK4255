@@ -12,7 +12,7 @@ For KinematicModelB and KinematicModelC:
 
 There is no difference in interface to BatchOptimizer. 
 However, a few things need to change:
-    intiial_parameters
+    intiial_parameters (0 for B and C?)
     KP
     T_hat (MUST return T_rotors_camera, T_arm_camera)
 
@@ -22,18 +22,23 @@ Once interfaces have been established, it might be a good idea to have a
 parent class, KinematicModel, from which A, B and C inherits from.
 """
 
+# TODO: Timer for optimize
+
 # TODO
 class KinematicModel:
     def __init__(self):
         pass
 
+
 class KinematicModelB:
     def __init__(self):
         pass
 
+
 class KinematicModelC:
     def __init__(self):
         pass
+
 
 class KinematicModelA:
     def __init__(self):
@@ -53,10 +58,7 @@ class KinematicModelA:
         self.KP = self.initial_parameters.shape[0]
 
         A1 = np.ones([2 * self.M * self.N, self.KP])
-        B = np.ones([2 * self.M, 3])
-        A2 = B.copy()
-        for _ in range(self.N - 1):
-            A2 = block_diag(A2, B)
+        A2 = np.kron(np.eye(self.N), np.ones([2 * self.M, 3]))
         self.JS = np.block([A1, A2])
 
     def T_hat(self, kinematic_parameters, rpy):
