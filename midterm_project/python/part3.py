@@ -29,13 +29,8 @@ parent class, KinematicModel, from which A, B and C inherits from.
 
 # TODO: plot_all
 
-# TODO Below.
+
 class KinematicModel:
-    def __init__(self):
-        pass
-
-
-class KinematicModelC:
     def __init__(self):
         pass
 
@@ -80,6 +75,67 @@ class KinematicModelA:
 
 
 class KinematicModelB:
+    def __init__(self):
+
+        self.T_platform_camera = np.loadtxt("../data/platform_to_camera.txt")
+        self.detections = np.loadtxt("../data/detections.txt")
+        self.K = np.loadtxt("../data/K.txt")
+
+        self.N = self.detections.shape[0]
+        self.M = 7
+
+        initial_kinematics = 0.1 * np.ones(18)
+        initial_markers = 0.1 * np.ones(21)  # actual values in heli_points[:3, :]
+        self.initial_parameters = np.hstack((initial_kinematics, initial_markers))
+        self.KP = self.initial_parameters.shape[0]
+
+        A1 = np.ones([2 * self.M * self.N, self.KP])
+        A2 = np.kron(np.eye(self.N), np.ones([2 * self.M, 3]))
+        self.JS = np.block([A1, A2])
+
+    def T_hat(self, kinematic_parameters, rpy):
+        """
+        2 = arm
+        3 = rotor
+        kinetic_parameters = [ax12, ay12, az12, lx12, ly12, lz12, markers...]
+        """
+
+        ax = kinematic_parameters[:3]
+        ay = kinematic_parameters[3:6]
+        az = kinematic_parameters[6:9]
+        lx = kinematic_parameters[9:12]
+        ly = kinematic_parameters[12:15]
+        lz = kinematic_parameters[15:18]
+        T_1_platform = (
+            rotate_x(ax[0])
+            @ rotate_y(ay[0])
+            @ rotate_z(az[0])
+            @ translate(lx[0], ly[0], lz[0])
+            @ rotate_z(rpy[0])
+        )
+        T_1_2 = (
+            rotate_x(ax[1])
+            @ rotate_y(ay[1])
+            @ rotate_z(az[1])
+            @ translate(lx[1], ly[1], lz[1])
+            @ rotate_y(rpy[1])
+        )
+        T_2_3 = (
+            rotate_x(ax[2])
+            @ rotate_y(ay[2])
+            @ rotate_z(az[2])
+            @ translate(lx[2], ly[2], lz[2])
+            @ rotate_x(rpy[2])
+        )
+
+        T_1_camera = self.T_platform_camera @ T_1_platform
+        T_2_camera = T_1_camera @ T_1_2
+        T_3_camera = T_2_camera @ T_2_3
+
+        return T_3_camera, T_2_camera
+
+
+class KinematicModelC:
     def __init__(self):
 
         self.T_platform_camera = np.loadtxt("../data/platform_to_camera.txt")
@@ -140,9 +196,10 @@ class KinematicModelB:
 
 
 class BatchOptimizer:
-    def __init__(self, model, tol=1e-6):
+    def __init__(self, model, tol=1e-6, verbosity=0):
         self.model = model
         self.xtol = tol
+        self.verbosity = verbosity
 
         initial_state_parameters, _ = part1b.detected_trajectory()
         initial_state_parameters = initial_state_parameters.flatten()
@@ -190,6 +247,7 @@ class BatchOptimizer:
             self.initial_parameters,
             xtol=self.xtol,
             jac_sparsity=self.model.JS,
+            verbose=self.verbosity,
         )
 
         return optimized_parameters.x
@@ -197,12 +255,12 @@ class BatchOptimizer:
 
 if __name__ == "__main__":
 
-    kinematic_model = KinematicModelB()
+    kinematic_model = KinematicModelA()
 
-    optimizer = BatchOptimizer(kinematic_model, tol=1e-2)
+    optimizer = BatchOptimizer(kinematic_model, tol=1e-2, verbosity=2)
     optimized_parameters = optimizer.optimize()
 
-    do_plot = False
+    do_plot = True
     if do_plot:
         all_r = []
         all_p = []
@@ -214,14 +272,14 @@ if __name__ == "__main__":
             all_p.append(rpy)
             all_r.append(optimizer.residuals(optimized_parameters))
         all_p = np.array(all_p)
-        all_r = np.array(all_r)
+        all_r = np.zeros((351, 2 * 7))
 
         all_detections = np.loadtxt("../data/detections.txt")
         plot_all(all_p, all_r, all_detections, subtract_initial_offset=True)
         # plt.savefig('out_part3.png')
         plt.show()
 
-    do_anim = True
+    do_anim = False
     if do_anim:
         plt.ion()
         fig, ax = plt.subplots()
