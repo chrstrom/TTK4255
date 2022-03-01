@@ -7,6 +7,34 @@ from common import translate, rotate_x, rotate_y, rotate_z, project
 import part1b
 
 
+"""
+For KinematicModelB and KinematicModelC:
+
+There is no difference in interface to BatchOptimizer. 
+However, a few things need to change:
+    intiial_parameters
+    KP
+    T_hat (MUST return T_rotors_camera, T_arm_camera)
+
+Note that the sparsity pattern does not change, just the size of the dense part
+
+Once interfaces have been established, it might be a good idea to have a 
+parent class, KinematicModel, from which A, B and C inherits from.
+"""
+
+# TODO
+class KinematicModel:
+    def __init__(self):
+        pass
+
+class KinematicModelB:
+    def __init__(self):
+        pass
+
+class KinematicModelC:
+    def __init__(self):
+        pass
+
 class KinematicModelA:
     def __init__(self):
 
@@ -124,7 +152,7 @@ if __name__ == "__main__":
             KP = kinematic_model.KP
             kinematic_parameters = optimized_parameters[:KP]
             rpy = optimized_parameters[
-                KP + image_number * 3 : KP + (image_number + 1) * 3
+                KP + 3 * image_number : KP + 3 * (image_number + 1)
             ]
 
             plt.imshow(plt.imread("../data/img_sequence/video%04d.jpg" % image_number))
