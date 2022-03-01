@@ -114,6 +114,10 @@ if __name__ == "__main__":
     optimized_parameters = optimizer.optimize()
 
     do_plot = True
+
+    plt.ion()
+    fig, ax = plt.subplots()
+    plt.draw()
     if do_plot:
 
         for image_number in range(kinematic_model.N):
@@ -124,11 +128,12 @@ if __name__ == "__main__":
             ]
 
             plt.imshow(plt.imread("../data/img_sequence/video%04d.jpg" % image_number))
-            plt.scatter(
+            ax.scatter(
                 *optimizer.u_hat(kinematic_parameters, rpy),
                 linewidths=1,
                 color="yellow",
                 s=10,
             )
-            plt.pause(0.005)
-        plt.show()
+
+            plt.pause(0.05)
+            ax.clear()
