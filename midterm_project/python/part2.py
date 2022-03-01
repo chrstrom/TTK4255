@@ -6,8 +6,8 @@ from scipy.optimize import least_squares
 # Tip: The solution from HW4 is inside common.py
 
 K = np.loadtxt('../data/K.txt')
-u = np.loadtxt('../data/platform_corners_image.txt') #each column is (ui, vi).T 
-X = np.loadtxt('../data/platform_corners_metric.txt') # each column is (X Y 0 1).T
+u = np.loadtxt('../data/platform_corners_image_minus_one.txt') #each column is (ui, vi).T 
+X = np.loadtxt('../data/platform_corners_metric_minus_one.txt') # each column is (X Y 0 1).T
 I = plt.imread('../data/img_sequence/video0000.jpg') # Only used for plotting
 
 # Task 2.1 (from HW4)
@@ -27,7 +27,7 @@ H = estimate_H(xy, XY)
 # (b)
 T1, T2 = decompose_H(H)
 translation_z = T1[2, 3]
-T_linear = T1 if translation_z > 0 else T2
+T_linear = T1 if translation_z < 0 else T2
 R0 = np.eye(4)
 R0[:3, :3] = T_linear[:3, :3]
 # u_hat = project(K, T_hat@X)
@@ -94,7 +94,7 @@ plt.ylim([600, 350])
 # plt.ylim([I.shape[0], 0])
 
 # Tip: To save the figure:
-plt.savefig('out_part2.2.png')
+#plt.savefig('out_part2.3_two.png')
 print(f"T: {T_hat}")
 
 plt.show()
