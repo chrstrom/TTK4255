@@ -1,33 +1,13 @@
-from cv2 import rotate
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.linalg import block_diag
 from scipy.optimize import least_squares
+import time 
 
 from common import translate, rotate_x, rotate_y, rotate_z, project
 import part1b
 from plot_all import plot_all
 
-"""
-For KinematicModelB and KinematicModelC:
-
-There is no difference in interface to BatchOptimizer. 
-However, a few things need to change:
-    intiial_parameters (0 for B and C?)
-    KP
-    T_hat (MUST return T_rotors_camera, T_arm_camera)
-
-Note that the sparsity pattern does not change, just the size of the dense part
-
-Once interfaces have been established, it might be a good idea to have a 
-parent class, KinematicModel, from which A, B and C inherits from.
-"""
-
-# TODO: Timer for optimize
-
-
 # TODO: plot_all
-
 
 class KinematicModel:
     def __init__(self):
@@ -210,6 +190,8 @@ class BatchOptimizer:
             r[2 * self.model.M * i : 2 * self.model.M * (i + 1)] = (
                 weights * (self.u_hat(kinematic_parameters, state) - u)
             ).flatten()
+
+
         return r
 
     def optimize(self):
@@ -227,11 +209,16 @@ class BatchOptimizer:
 
 if __name__ == "__main__":
 
-    kinematic_model = KinematicModelC()
+    kinematic_model = KinematicModelA()
 
-    optimizer = BatchOptimizer(kinematic_model, tol=1e-2, verbosity=2)
+    tol = 1e-8
+    optimizer = BatchOptimizer(kinematic_model, tol=tol, verbosity=2)
+
+    time_start = time.time()
     optimized_parameters = optimizer.optimize()
+    time_end = time.time()
 
+    print("Time taken to run batch optimization with tolerance {:f}: {:.4f} seconds.".format(tol, time_end - time_start))
     do_plot = True
     if do_plot:
         all_r = []
@@ -242,9 +229,8 @@ if __name__ == "__main__":
                 KP + 3 * image_number : KP + 3 * (image_number + 1)
             ]
             all_p.append(rpy)
-            all_r.append(optimizer.residuals(optimized_parameters))
+        all_r = optimizer.residuals(optimized_parameters).reshape((351, 14))
         all_p = np.array(all_p)
-        all_r = np.zeros((351, 2 * 7))
 
         all_detections = np.loadtxt("../data/detections.txt")
         plot_all(all_p, all_r, all_detections, subtract_initial_offset=True)
