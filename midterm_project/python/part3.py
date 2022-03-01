@@ -25,36 +25,32 @@ parent class, KinematicModel, from which A, B and C inherits from.
 
 # TODO: Timer for optimize
 
-# TODO: Data for optimize
 
 # TODO: plot_all
 
 
 class KinematicModel:
     def __init__(self):
-        pass
-
-
-class KinematicModelA:
-    def __init__(self):
-
         self.T_platform_camera = np.loadtxt("../data/platform_to_camera.txt")
         self.detections = np.loadtxt("../data/detections.txt")
         self.K = np.loadtxt("../data/K.txt")
-
         self.N = self.detections.shape[0]
         self.M = 7
+        self.initial_markers = 0.1 * np.ones(21)  # actual values in heli_points[:3, :]
 
-        initial_lengths = np.array(
-            [0.1, 0.1, 0.1, 0.1, 0.1]
-        )  # actual values: 0.1145, 0.325, 0.050, 0.65, 0.030
-        initial_markers = 0.1 * np.ones(21)  # actual values in heli_points[:3, :]
-        self.initial_parameters = np.hstack((initial_lengths, initial_markers))
-        self.KP = self.initial_parameters.shape[0]
-
-        A1 = np.ones([2 * self.M * self.N, self.KP])
+    def jacobian_sparsity(self, KP):
+        A1 = np.ones([2 * self.M * self.N, KP])
         A2 = np.kron(np.eye(self.N), np.ones([2 * self.M, 3]))
-        self.JS = np.block([A1, A2])
+        return np.block([A1, A2])
+
+
+class KinematicModelA(KinematicModel):
+    def __init__(self):
+        super().__init__()
+        initial_lengths = 0.1 * np.ones(5)
+        self.initial_parameters = np.hstack((initial_lengths, self.initial_markers))
+        self.KP = self.initial_parameters.shape[0]
+        self.JS = self.jacobian_sparsity(self.KP)
 
     def T_hat(self, kinematic_parameters, rpy):
         T_base_platform = translate(
@@ -74,24 +70,13 @@ class KinematicModelA:
         return T_rotors_camera, T_arm_camera
 
 
-class KinematicModelB:
+class KinematicModelB(KinematicModel):
     def __init__(self):
-
-        self.T_platform_camera = np.loadtxt("../data/platform_to_camera.txt")
-        self.detections = np.loadtxt("../data/detections.txt")
-        self.K = np.loadtxt("../data/K.txt")
-
-        self.N = self.detections.shape[0]
-        self.M = 7
-
+        super().__init__()
         initial_kinematics = 0.1 * np.ones(18)
-        initial_markers = 0.1 * np.ones(21)  # actual values in heli_points[:3, :]
-        self.initial_parameters = np.hstack((initial_kinematics, initial_markers))
+        self.initial_parameters = np.hstack((initial_kinematics, self.initial_markers))
         self.KP = self.initial_parameters.shape[0]
-
-        A1 = np.ones([2 * self.M * self.N, self.KP])
-        A2 = np.kron(np.eye(self.N), np.ones([2 * self.M, 3]))
-        self.JS = np.block([A1, A2])
+        self.JS = self.jacobian_sparsity(self.KP)
 
     def T_hat(self, kinematic_parameters, rpy):
         """
@@ -135,26 +120,13 @@ class KinematicModelB:
         return T_3_camera, T_2_camera
 
 
-class KinematicModelC:
+class KinematicModelC(KinematicModel):
     def __init__(self):
-
-        self.T_platform_camera = np.loadtxt("../data/platform_to_camera.txt")
-        self.detections = np.loadtxt("../data/detections.txt")
-        self.K = np.loadtxt("../data/K.txt")
-
-        self.N = self.detections.shape[0]
-        self.M = 7
-
-        initial_kinematics = 0.1 * np.ones(
-            12
-        )  # actual values: 0.1145, 0.325, 0.050, 0.65, 0.030
-        initial_markers = 0.1 * np.ones(21)  # actual values in heli_points[:3, :]
-        self.initial_parameters = np.hstack((initial_kinematics, initial_markers))
+        super().__init__()
+        initial_kinematics = 0.1 * np.ones(12)
+        self.initial_parameters = np.hstack((initial_kinematics, self.initial_markers))
         self.KP = self.initial_parameters.shape[0]
-
-        A1 = np.ones([2 * self.M * self.N, self.KP])
-        A2 = np.kron(np.eye(self.N), np.ones([2 * self.M, 3]))
-        self.JS = np.block([A1, A2])
+        self.JS = self.jacobian_sparsity(self.KP)
 
     def T_hat(self, kinematic_parameters, rpy):
         """
@@ -255,7 +227,7 @@ class BatchOptimizer:
 
 if __name__ == "__main__":
 
-    kinematic_model = KinematicModelA()
+    kinematic_model = KinematicModelC()
 
     optimizer = BatchOptimizer(kinematic_model, tol=1e-2, verbosity=2)
     optimized_parameters = optimizer.optimize()
