@@ -1,3 +1,4 @@
+from cv2 import rotate
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.linalg import block_diag
@@ -5,7 +6,7 @@ from scipy.optimize import least_squares
 
 from common import translate, rotate_x, rotate_y, rotate_z, project
 import part1b
-
+from plot_all import plot_all
 
 """
 For KinematicModelB and KinematicModelC:
@@ -24,13 +25,12 @@ parent class, KinematicModel, from which A, B and C inherits from.
 
 # TODO: Timer for optimize
 
-# TODO
+# TODO: Data for optimize
+
+# TODO: plot_all
+
+# TODO Below.
 class KinematicModel:
-    def __init__(self):
-        pass
-
-
-class KinematicModelB:
     def __init__(self):
         pass
 
@@ -79,6 +79,66 @@ class KinematicModelA:
         return T_rotors_camera, T_arm_camera
 
 
+class KinematicModelB:
+    def __init__(self):
+
+        self.T_platform_camera = np.loadtxt("../data/platform_to_camera.txt")
+        self.detections = np.loadtxt("../data/detections.txt")
+        self.K = np.loadtxt("../data/K.txt")
+
+        self.N = self.detections.shape[0]
+        self.M = 7
+
+        initial_kinematics = 0.1 * np.ones(
+            12
+        )  # actual values: 0.1145, 0.325, 0.050, 0.65, 0.030
+        initial_markers = 0.1 * np.ones(21)  # actual values in heli_points[:3, :]
+        self.initial_parameters = np.hstack((initial_kinematics, initial_markers))
+        self.KP = self.initial_parameters.shape[0]
+
+        A1 = np.ones([2 * self.M * self.N, self.KP])
+        A2 = np.kron(np.eye(self.N), np.ones([2 * self.M, 3]))
+        self.JS = np.block([A1, A2])
+
+    def T_hat(self, kinematic_parameters, rpy):
+        """
+        2 = arm
+        3 = rotor
+        kinetic_parameters = [ax12, ay12, az12, lx12, ly12, lz12, markers...]
+        """
+
+        ax = kinematic_parameters[:2]
+        ay = kinematic_parameters[2:4]
+        az = kinematic_parameters[4:6]
+        lx = kinematic_parameters[6:8]
+        ly = kinematic_parameters[8:10]
+        lz = kinematic_parameters[10:12]
+        T_1_platform = (
+            rotate_x(ax[0])
+            @ rotate_y(ay[0])
+            @ translate(lx[0], ly[0], 0.0)
+            @ rotate_z(rpy[0])
+        )
+        T_1_2 = (
+            rotate_x(ax[1])
+            @ rotate_z(az[0])
+            @ translate(lx[1], 0.0, lz[0])
+            @ rotate_y(rpy[1])
+        )
+        T_2_3 = (
+            rotate_y(ay[1])
+            @ rotate_z(az[1])
+            @ translate(0.0, ly[1], lz[1])
+            @ rotate_x(rpy[2])
+        )
+
+        T_1_camera = self.T_platform_camera @ T_1_platform
+        T_2_camera = T_1_camera @ T_1_2
+        T_3_camera = T_2_camera @ T_2_3
+
+        return T_3_camera, T_2_camera
+
+
 class BatchOptimizer:
     def __init__(self, model, tol=1e-6):
         self.model = model
@@ -121,7 +181,6 @@ class BatchOptimizer:
             r[2 * self.model.M * i : 2 * self.model.M * (i + 1)] = (
                 weights * (self.u_hat(kinematic_parameters, state) - u)
             ).flatten()
-
         return r
 
     def optimize(self):
@@ -138,20 +197,37 @@ class BatchOptimizer:
 
 if __name__ == "__main__":
 
-    kinematic_model = KinematicModelA()
+    kinematic_model = KinematicModelB()
 
-    optimizer = BatchOptimizer(kinematic_model, tol=1e-4)
+    optimizer = BatchOptimizer(kinematic_model, tol=1e-2)
     optimized_parameters = optimizer.optimize()
 
-    do_plot = True
-
-    plt.ion()
-    fig, ax = plt.subplots()
-    plt.draw()
+    do_plot = False
     if do_plot:
-
+        all_r = []
+        all_p = []
+        KP = kinematic_model.KP
         for image_number in range(kinematic_model.N):
-            KP = kinematic_model.KP
+            rpy = optimized_parameters[
+                KP + 3 * image_number : KP + 3 * (image_number + 1)
+            ]
+            all_p.append(rpy)
+            all_r.append(optimizer.residuals(optimized_parameters))
+        all_p = np.array(all_p)
+        all_r = np.array(all_r)
+
+        all_detections = np.loadtxt("../data/detections.txt")
+        plot_all(all_p, all_r, all_detections, subtract_initial_offset=True)
+        # plt.savefig('out_part3.png')
+        plt.show()
+
+    do_anim = True
+    if do_anim:
+        plt.ion()
+        fig, ax = plt.subplots()
+        plt.draw()
+        KP = kinematic_model.KP
+        for image_number in range(kinematic_model.N):
             kinematic_parameters = optimized_parameters[:KP]
             rpy = optimized_parameters[
                 KP + 3 * image_number : KP + 3 * (image_number + 1)
