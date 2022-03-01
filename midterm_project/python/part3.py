@@ -7,7 +7,7 @@ from common import translate, rotate_x, rotate_y, rotate_z, project
 import part1b
 
 
-class kinematic_model_A:
+class KinematicModelA:
     def __init__(self):
 
         self.T_platform_camera = np.loadtxt("../data/platform_to_camera.txt")
@@ -107,7 +107,7 @@ class BatchOptimizer:
 
 if __name__ == "__main__":
 
-    kinematic_model = kinematic_model_A()
+    kinematic_model = KinematicModelA()
 
     optimizer = BatchOptimizer(kinematic_model)
     optimized_parameters = optimizer.optimize()
