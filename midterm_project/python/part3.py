@@ -50,8 +50,9 @@ class KinematicModelA:
 
 
 class BatchOptimizer:
-    def __init__(self, model):
+    def __init__(self, model, tol=1e-6):
         self.model = model
+        self.xtol = tol
 
         initial_state_parameters, _ = part1b.detected_trajectory()
         initial_state_parameters = initial_state_parameters.flatten()
@@ -98,7 +99,7 @@ class BatchOptimizer:
         optimized_parameters = least_squares(
             self.residuals,
             self.initial_parameters,
-            xtol=1e-6,
+            xtol=self.xtol,
             jac_sparsity=self.model.JS,
         )
 
@@ -109,23 +110,25 @@ if __name__ == "__main__":
 
     kinematic_model = KinematicModelA()
 
-    optimizer = BatchOptimizer(kinematic_model)
+    optimizer = BatchOptimizer(kinematic_model, tol=1e-4)
     optimized_parameters = optimizer.optimize()
 
-    image_number = 0
     do_plot = True
     if do_plot:
-        KP = kinematic_model.KP
-        kinematic_parameters = optimized_parameters[:KP]
-        rpy = optimized_parameters[KP + image_number * 3 : KP + (image_number + 1) * 3]
 
-        plt.imshow(plt.imread("../data/img_sequence/video%04d.jpg" % image_number))
-        plt.scatter(
-            *optimizer.u_hat(kinematic_parameters, rpy),
-            linewidths=1,
-            color="yellow",
-            s=10,
-            label="LM batch opt. predicted markers"
-        )
-        plt.legend()
+        for image_number in range(kinematic_model.N):
+            KP = kinematic_model.KP
+            kinematic_parameters = optimized_parameters[:KP]
+            rpy = optimized_parameters[
+                KP + image_number * 3 : KP + (image_number + 1) * 3
+            ]
+
+            plt.imshow(plt.imread("../data/img_sequence/video%04d.jpg" % image_number))
+            plt.scatter(
+                *optimizer.u_hat(kinematic_parameters, rpy),
+                linewidths=1,
+                color="yellow",
+                s=10,
+            )
+            plt.pause(0.005)
         plt.show()
