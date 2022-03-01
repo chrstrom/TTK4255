@@ -25,9 +25,11 @@ H = estimate_H(xy, XY)
 # u_hat = project(K, H@XY1)
 
 # (b)
-# T1, T2 = decompose_H(H)
-# translation_z = T1[2, 3]
-# T_hat = T1 if translation_z > 0 else T2
+T1, T2 = decompose_H(H)
+translation_z = T1[2, 3]
+T_linear = T1 if translation_z > 0 else T2
+R0 = np.eye(4)
+R0[:3, :3] = T_linear[:3, :3]
 # u_hat = project(K, T_hat@X)
 # errors = np.linalg.norm(u - u_hat, axis=0)
 
@@ -39,7 +41,7 @@ h = np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
 def T_from_h(h):
     p = h[:3]
     t = h[3:]
-    R = rotate_x(p[0])@rotate_y(p[1])@rotate_z(p[2])
+    R = rotate_x(p[0])@rotate_y(p[1])@rotate_z(p[2])@R0
 
     T = np.eye(4)
     T[:3, :3] = R[:3, :3]
@@ -93,5 +95,6 @@ plt.ylim([600, 350])
 
 # Tip: To save the figure:
 plt.savefig('out_part2.2.png')
+print(f"T: {T_hat}")
 
 plt.show()
