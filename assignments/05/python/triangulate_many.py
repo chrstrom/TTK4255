@@ -13,5 +13,17 @@ def triangulate_many(xy1, xy2, P1, P2):
             [shape 4 x n]
     """
     n = xy1.shape[1]
-    X = np.empty((4, n))  # Placeholder, replace with your implementation
-    return X  # Placeholder, replace with your implementation
+    X = np.empty((4, n))
+
+    for i in range(n):
+        # solve for (9)
+        A = np.array([xy1[0, i] * P1[2,:] - P1[0,:], 
+        xy1[1, i] * P1[2,:] - P1[1,:], 
+        xy2[0, i] * P2[2,:] - P2[0,:], 
+        xy2[1, i] * P2[2,:] - P2[1,:]])
+
+        _, _, VT = np.linalg.svd(A)
+
+        X[:, i] = VT[-1]
+
+    return X / X[-1]

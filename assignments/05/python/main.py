@@ -32,7 +32,10 @@ E = estimate_E(xy1, xy2)
 F = F_from_E(E, K)
 
 # Task 3: Triangulate 3D pointst[{(]})}]
-# X = ...u
+P1 = np.c_[np.eye(3), np.zeros(3)]
+P2 = decompose_E(E)[0]
+
+X = triangulate_many(xy1, xy2, P1, P2)
 
 #
 # Uncomment in Task 2
@@ -42,7 +45,6 @@ draw_correspondences(I1, I2, uv1, uv2, F, sample_size=8)
 
 #
 # Uncomment in Task 3
-#
-# draw_point_cloud(X, I1, uv1, xlim=[-1,+1], ylim=[-1,+1], zlim=[1,3])
+draw_point_cloud(X, I1, uv1, xlim=[-1,+1], ylim=[-1,+1], zlim=[1,3])
 
 plt.show()
