@@ -7,10 +7,10 @@ from triangulate_many import *
 from epipolar_distance import *
 from F_from_E import *
 
+
 def project(K, X):
     X_tilde = K @ X
     return X_tilde[:2, :] / X_tilde[2, :]
-
 
 
 K = np.loadtxt("../data/K.txt")
@@ -40,11 +40,11 @@ X = triangulate_many(xy1, xy2, P1, P2)
 #
 # Uncomment in Task 2
 #
-np.random.seed(123) # Leave as commented out to get a random selection each time
+np.random.seed(123)  # Leave as commented out to get a random selection each time
 draw_correspondences(I1, I2, uv1, uv2, F, sample_size=8)
 
 #
 # Uncomment in Task 3
-draw_point_cloud(X, I1, uv1, xlim=[-1,+1], ylim=[-1,+1], zlim=[1,3])
+draw_point_cloud(X, I1, uv1, xlim=[-1, +1], ylim=[-1, +1], zlim=[1, 3])
 
 plt.show()

@@ -17,10 +17,14 @@ def triangulate_many(xy1, xy2, P1, P2):
 
     for i in range(n):
         # solve for (9)
-        A = np.array([xy1[0, i] * P1[2,:] - P1[0,:], 
-        xy1[1, i] * P1[2,:] - P1[1,:], 
-        xy2[0, i] * P2[2,:] - P2[0,:], 
-        xy2[1, i] * P2[2,:] - P2[1,:]])
+        A = np.array(
+            [
+                xy1[0, i] * P1[2, :] - P1[0, :],
+                xy1[1, i] * P1[2, :] - P1[1, :],
+                xy2[0, i] * P2[2, :] - P2[0, :],
+                xy2[1, i] * P2[2, :] - P2[1, :],
+            ]
+        )
 
         _, _, VT = np.linalg.svd(A)
 
