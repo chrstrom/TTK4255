@@ -7,6 +7,12 @@ from triangulate_many import *
 from epipolar_distance import *
 from F_from_E import *
 
+def project(K, X):
+    X_tilde = K @ X
+    return X_tilde[:2, :] / X_tilde[2, :]
+
+
+
 K = np.loadtxt("../data/K.txt")
 I1 = plt.imread("../data/image1.jpg") / 255.0
 I2 = plt.imread("../data/image2.jpg") / 255.0
@@ -16,17 +22,23 @@ matches = np.loadtxt("../data/matches.txt")
 uv1 = np.vstack([matches[:, :2].T, np.ones(matches.shape[0])])
 uv2 = np.vstack([matches[:, 2:4].T, np.ones(matches.shape[0])])
 
-# Task 2: Estimate E
-# E = ...
+K_inv = np.linalg.inv(K)
 
-# Task 3: Triangulate 3D points
-# X = ...
+xy1 = project(K_inv, uv1)
+xy2 = project(K_inv, uv2)
+
+# Task 2: Estimate E
+E = estimate_E(xy1, xy2)
+F = F_from_E(E, K)
+
+# Task 3: Triangulate 3D pointst[{(]})}]
+# X = ...u
 
 #
 # Uncomment in Task 2
 #
-# np.random.seed(123) # Leave as commented out to get a random selection each time
-# draw_correspondences(I1, I2, uv1, uv2, F_from_E(E, K), sample_size=8)
+np.random.seed(123) # Leave as commented out to get a random selection each time
+draw_correspondences(I1, I2, uv1, uv2, F, sample_size=8)
 
 #
 # Uncomment in Task 3
