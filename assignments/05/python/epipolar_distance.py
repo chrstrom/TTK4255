@@ -1,6 +1,7 @@
 import numpy as np
+from numba import jit
 
-
+@jit(nopython=True) 
 def epipolar_distance(F, uv1, uv2):
     """
     F should be the fundamental matrix (use F_from_E)
