@@ -3,8 +3,8 @@ import numpy as np
 import cv2 as cv
 from matlab_inspired_interface import match_features, show_matched_features
 
-I1 = cv.imread('../data/IMG_8210.jpg', cv.IMREAD_GRAYSCALE)
-I2 = cv.imread('../data/IMG_8211.jpg', cv.IMREAD_GRAYSCALE)
+I1 = cv.imread("../data/IMG_8210.jpg", cv.IMREAD_GRAYSCALE)
+I2 = cv.imread("../data/IMG_8211.jpg", cv.IMREAD_GRAYSCALE)
 
 # NB! This script uses a very small number of features so that it runs quickly.
 # You will want to pass other options to SIFT_create. See the documentation:
@@ -19,14 +19,14 @@ kp2 = np.array([kp.pt for kp in kp2])
 # "unique" (cross-check).
 index_pairs, match_metric = match_features(desc1, desc2, max_ratio=0.9, unique=False)
 print(index_pairs[:10])
-print('Found %d matches' % index_pairs.shape[0])
+print("Found %d matches" % index_pairs.shape[0])
 
 # Plot the 50 best matches in two ways
 best_index_pairs = index_pairs[np.argsort(match_metric)[:50]]
-best_kp1 = kp1[best_index_pairs[:,0]]
-best_kp2 = kp2[best_index_pairs[:,1]]
+best_kp1 = kp1[best_index_pairs[:, 0]]
+best_kp2 = kp2[best_index_pairs[:, 1]]
 plt.figure()
-show_matched_features(I1, I2, best_kp1, best_kp2, method='falsecolor')
+show_matched_features(I1, I2, best_kp1, best_kp2, method="falsecolor")
 plt.figure()
-show_matched_features(I1, I2, best_kp1, best_kp2, method='montage')
+show_matched_features(I1, I2, best_kp1, best_kp2, method="montage")
 plt.show()

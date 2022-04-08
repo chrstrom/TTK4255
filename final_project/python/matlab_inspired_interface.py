@@ -2,7 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2 as cv
 
-def show_matched_features(I1, I2, points1, points2, method='falsecolor'):
+
+def show_matched_features(I1, I2, points1, points2, method="falsecolor"):
     """
     Display corresponding feature points. Consistent with Matlab Computer
     Vision Toolbox's showMatchedFeatures, except that method must be either
@@ -14,24 +15,45 @@ def show_matched_features(I1, I2, points1, points2, method='falsecolor'):
     of SIFT KeyPoints to an Nx2 array of coordinates.
     """
     assert I1.shape == I2.shape
-    assert I1.ndim == 2, 'I1 and I2 must be grayscale images'
+    assert I1.ndim == 2, "I1 and I2 must be grayscale images"
     assert points1.shape == points2.shape
-    assert method in ['montage', 'falsecolor'], 'method must be one of "falsecolor" or "montage" but was "%s"' % method
-    if method == 'montage':
-        plt.imshow(np.concatenate((I1,I2), axis=-1), cmap='gray')
+    assert method in ["montage", "falsecolor"], (
+        'method must be one of "falsecolor" or "montage" but was "%s"' % method
+    )
+    if method == "montage":
+        plt.imshow(np.concatenate((I1, I2), axis=-1), cmap="gray")
         points2 = points2.copy()
-        points2[:,0] += I1.shape[1]
+        points2[:, 0] += I1.shape[1]
     else:
         plt.imshow(np.stack((I1, I2, I2), axis=-1))
-    plt.scatter(points1[:,0], points1[:,1], s=10, linewidths=0.5, facecolors='none', edgecolors='#ff0000', label='Matched points 1')
-    plt.scatter(points2[:,0], points2[:,1], s=20, marker='+', linewidths=0.5, color='#00ff00', label='Matched points 2')
+    plt.scatter(
+        points1[:, 0],
+        points1[:, 1],
+        s=10,
+        linewidths=0.5,
+        facecolors="none",
+        edgecolors="#ff0000",
+        label="Matched points 1",
+    )
+    plt.scatter(
+        points2[:, 0],
+        points2[:, 1],
+        s=20,
+        marker="+",
+        linewidths=0.5,
+        color="#00ff00",
+        label="Matched points 2",
+    )
     plt.legend()
     plt.plot(
-        np.stack((points1[:,0], points2[:,0])),
-        np.stack((points1[:,1], points2[:,1])),
-        color='#ffff00', linewidth=0.5)
+        np.stack((points1[:, 0], points2[:, 0])),
+        np.stack((points1[:, 1], points2[:, 1])),
+        color="#ffff00",
+        linewidth=0.5,
+    )
     plt.xticks([])
     plt.yticks([])
+
 
 def match_features(features1, features2, max_ratio=1.0, unique=False):
     """
@@ -77,8 +99,8 @@ def match_features(features1, features2, max_ratio=1.0, unique=False):
     matcher = cv.BFMatcher()
     matches1to2 = matcher.knnMatch(features1, features2, k=2)
     indices1to2 = []
-    for m,n in matches1to2:
-        if m.distance <= max_ratio*n.distance:
+    for m, n in matches1to2:
+        if m.distance <= max_ratio * n.distance:
             indices1to2.append(m.trainIdx)
         else:
             indices1to2.append(None)
@@ -86,15 +108,15 @@ def match_features(features1, features2, max_ratio=1.0, unique=False):
     if unique:
         matches2to1 = matcher.match(features2, features1)
         indices2to1 = [m.trainIdx for m in matches2to1]
-        for i1,i2 in enumerate(indices1to2):
+        for i1, i2 in enumerate(indices1to2):
             if i2 != None and indices2to1[i2] == i1:
-                index_pairs.append((i1,i2))
+                index_pairs.append((i1, i2))
                 match_metric.append(matches1to2[i1][0].distance)
 
     else:
-        for i1,i2 in enumerate(indices1to2):
+        for i1, i2 in enumerate(indices1to2):
             if i2 != None:
-                index_pairs.append((i1,i2))
+                index_pairs.append((i1, i2))
                 match_metric.append(matches1to2[i1][0].distance)
 
     return np.array(index_pairs), np.array(match_metric)
