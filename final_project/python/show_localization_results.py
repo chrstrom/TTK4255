@@ -30,7 +30,7 @@ xlim = [-10,+10]
 ylim = [-10,+10]
 zlim = [0,+20]
 
-frame_size = 1;
+frame_size = 1
 marker_size = 5
 
 plt.figure('3D point cloud', figsize=(6,6))
