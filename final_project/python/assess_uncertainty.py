@@ -29,8 +29,10 @@ if __name__ == '__main__':
 
     image = "../data/calibration/checkerboard.png"
     
-
     camera_matrix = np.array(((2359.40946, 0, 1370.05852), (0, 2359.61091, 1059.63818), (0, 0, 1)))
+
+    width = 100 
+    height = 10 
 
     for i in range(N):
             
@@ -41,15 +43,19 @@ if __name__ == '__main__':
         p2 = np.random.normal(-0.00419, 0.00014)
 
         distortion_coefficients = np.array((k1, k2, k3, p1, p2))
+        new_camera_matrix, _ = cv.getOptimalNewCameraMatrix(
+            camera_matrix, distortion_coefficients, (width, height), 1, (width, height)
+        )
 
         I = cv.imread(image, cv.IMREAD_GRAYSCALE)
+        IU = np.empty_like(I)
 
-        dst = cv.undistort(I, camera_matrix, distortion_coefficients, camera_matrix)
+        _ = cv.undistort(src=I, dst=IU, cameraMatrix=camera_matrix, distCoeffs=distortion_coefficients, newCameraMatrix=new_camera_matrix)
 
         # cv.imshow("distorted image with sampled distortion coefficients", dst)
         # cv.waitKey()
 
-        cv.imwrite(f"../data/distortion_sample/sample{i:03d}.png", dst) 
+        cv.imwrite(f"../data/distortion_sample/sample{i:03d}.png", IU) 
 
 
 
