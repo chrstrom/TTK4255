@@ -18,6 +18,8 @@ I1 = plt.imread("../data/image1.jpg") / 255.0
 I2 = plt.imread("../data/image2.jpg") / 255.0
 matches = np.loadtxt("../data/matches.txt")
 
+print(matches)
+
 uv1 = np.vstack([matches[:, :2].T, np.ones(matches.shape[0])])
 uv2 = np.vstack([matches[:, 2:4].T, np.ones(matches.shape[0])])
 
