@@ -111,6 +111,36 @@ class CameraCalibration:
 
         return u_all, X_all, image_size
 
+
+    def assess_uncertainty(self, N):
+
+        image = join(self.output_folder, "checkerboard.png")
+        camera_matrix = np.array(((2359.40946, 0, 1370.05852), (0, 2359.61091, 1059.63818), (0, 0, 1)))
+        size = (100, 10) # width, height
+
+        print(f"Generating {N} images with sampled distortion... ", end="")
+        for i in range(N):
+            
+            # Parameters found from other script
+            k1 = np.random.normal(-0.06652, 0.00109)
+            k2 = np.random.normal(0.06534, 0.00624)
+            k3 = np.random.normal(-0.07555, 0.01126)
+            p1 = np.random.normal(0.00065, 0.00011)
+            p2 = np.random.normal(-0.00419, 0.00014)
+
+            distortion_coefficients = np.array((k1, k2, k3, p1, p2))
+            new_camera_matrix, _ = cv.getOptimalNewCameraMatrix(
+                camera_matrix, distortion_coefficients, size, 1, size
+            )
+
+            I = cv.imread(image, cv.IMREAD_GRAYSCALE)
+            IU = np.empty_like(I)
+
+            _ = cv.undistort(src=I, dst=IU, cameraMatrix=camera_matrix, distCoeffs=distortion_coefficients, newCameraMatrix=new_camera_matrix)
+
+            cv.imwrite(f"../data/distortion_sample/sample{i:03d}.png", IU) 
+        print("Done!")
+
     def run(self):
 
         if exists(join(self.output_folder, "u_all.npy")):
@@ -136,4 +166,8 @@ class CameraCalibration:
 
 
 if __name__ == "__main__":
-    CameraCalibration().run()
+    calibrator = CameraCalibration()
+
+    calibrator.run()
+
+    calibrator.assess_uncertainty(10)
