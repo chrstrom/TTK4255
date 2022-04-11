@@ -111,16 +111,17 @@ class CameraCalibration:
 
         return u_all, X_all, image_size
 
-
     def assess_uncertainty(self, N):
 
         image = join(self.output_folder, "checkerboard.png")
-        camera_matrix = np.array(((2359.40946, 0, 1370.05852), (0, 2359.61091, 1059.63818), (0, 0, 1)))
-        size = (100, 10) # width, height
+        camera_matrix = np.array(
+            ((2359.40946, 0, 1370.05852), (0, 2359.61091, 1059.63818), (0, 0, 1))
+        )
+        size = (100, 10)  # width, height
 
         print(f"Generating {N} images with sampled distortion... ", end="")
         for i in range(N):
-            
+
             # Parameters found from other script
             k1 = np.random.normal(-0.06652, 0.00109)
             k2 = np.random.normal(0.06534, 0.00624)
@@ -136,9 +137,15 @@ class CameraCalibration:
             I = cv.imread(image, cv.IMREAD_GRAYSCALE)
             IU = np.empty_like(I)
 
-            _ = cv.undistort(src=I, dst=IU, cameraMatrix=camera_matrix, distCoeffs=distortion_coefficients, newCameraMatrix=new_camera_matrix)
+            _ = cv.undistort(
+                src=I,
+                dst=IU,
+                cameraMatrix=camera_matrix,
+                distCoeffs=distortion_coefficients,
+                newCameraMatrix=new_camera_matrix,
+            )
 
-            cv.imwrite(f"../data/distortion_sample/sample{i:03d}.png", IU) 
+            cv.imwrite(f"../data/distortion_sample/sample{i:03d}.png", IU)
         print("Done!")
 
     def run(self):
