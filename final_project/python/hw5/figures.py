@@ -54,6 +54,14 @@ def draw_correspondences(I1, I2, uv1, uv2, F, sample_size=8):
         % sample_size
     )
 
+def draw_frame(ax, T, scale):
+    X0 = T @ np.array((0, 0, 0, 1))
+    X1 = T @ np.array((1, 0, 0, 1))
+    X2 = T @ np.array((0, 1, 0, 1))
+    X3 = T @ np.array((0, 0, 1, 1))
+    ax.plot([X0[0], X1[0]], [X0[2], X1[2]], [X0[1], X1[1]], color="#FF7F0E")
+    ax.plot([X0[0], X2[0]], [X0[2], X2[2]], [X0[1], X2[1]], color="#2CA02C")
+    ax.plot([X0[0], X3[0]], [X0[2], X3[2]], [X0[1], X3[1]], color="#1F77B4")
 
 def draw_point_cloud(X, I1, uv1, xlim, ylim, zlim):
     assert (
@@ -67,7 +75,7 @@ def draw_point_cloud(X, I1, uv1, xlim, ylim, zlim):
     # Matplotlib doesn't let you easily change the up-axis to match the
     # convention we use in the course (it assumes Z is upward). So this
     # code does a silly rearrangement of the Y and Z arguments.
-    plt.figure("3D point cloud", figsize=(6, 6))
+    plt.figure(f"3D point cloud using {uv1.shape[1]} points", figsize=(6, 6))
     ax = plt.axes(projection="3d")
     ax.scatter(X[0, :], X[2, :], X[1, :], c=c, marker=".", depthshade=False)
     ax.grid(False)
@@ -77,7 +85,7 @@ def draw_point_cloud(X, I1, uv1, xlim, ylim, zlim):
     ax.set_xlabel("X")
     ax.set_ylabel("Z")
     ax.set_zlabel("Y")
-    plt.title("[Click, hold and drag with the mouse to rotate the view]")
+    plt.title(f"3D point cloud using {uv1.shape[1]} points")
 
 
 def hline(l, **args):
