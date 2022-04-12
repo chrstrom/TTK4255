@@ -53,16 +53,11 @@ class RANSAC:
 
         X = triangulate_many(xy1_in, xy2_in, P1, P2)
 
-        return X, E, [xy1_in, xy2_in], [uv1_in, uv2_in]
+        return X, E, [xy1_in, xy2_in], [uv1_in, uv2_in], inlier_set
 
 
 class FeatureMatcher:
-    def __init__(self, image_one, image_two, opts):
-        self.I1 = cv.imread(image_one, cv.IMREAD_GRAYSCALE)
-        self.I2 = cv.imread(image_two, cv.IMREAD_GRAYSCALE)
-
-        self.I1P = plt.imread(image_one) / 255.0
-        self.I2P = plt.imread(image_two) / 255.0
+    def __init__(self, opts):
 
         self.nfeatures = opts[0]
         self.nOctaveLayers = opts[1]
@@ -75,12 +70,27 @@ class FeatureMatcher:
         self.K = np.loadtxt("/home/strom/TTK4255/final_project/data/calibration/K.txt")
         self.K_inv = np.linalg.inv(self.K)
 
+        self.sift = cv.SIFT_create(
+            self.nfeatures,
+            self.nOctaveLayers,
+            self.contrastThreshold,
+            self.edgeThreshold,
+            self.sigma,
+        )
+
         self.ransac = RANSAC()
+
+        self.model = None
 
     def __project(self, X):
         K_inv = np.linalg.inv(self.K)
         X_tilde = K_inv @ X
         return X_tilde[:2, :] / X_tilde[2, :]
+
+    def get_keypoints(self, image):
+        keypoints, desc = self.sift.detectAndCompute(image, None)
+        keypoints = np.array([kp.pt for kp in keypoints])
+        return keypoints, desc
 
     def __get_matches(self, kp1, kp2, index_pairs):
 
@@ -110,19 +120,17 @@ class FeatureMatcher:
         show_matched_features(self.I1, self.I2, best_kp1, best_kp2, method="montage")
         plt.show()
 
-    def run(self, do_assessment=False):
+    def run(self, image_one, image_two, do_assessment=False):
+
+        self.I1 = cv.imread(image_one, cv.IMREAD_GRAYSCALE)
+        self.I2 = cv.imread(image_two, cv.IMREAD_GRAYSCALE)
+
+        self.I1P = plt.imread(image_one) / 255.0
+        self.I2P = plt.imread(image_two) / 255.0
+
         print("Detecting keypoints...")
-        sift = cv.SIFT_create(
-            self.nfeatures,
-            self.nOctaveLayers,
-            self.contrastThreshold,
-            self.edgeThreshold,
-            self.sigma,
-        )
-        kp1, desc1 = sift.detectAndCompute(self.I1, None)
-        kp2, desc2 = sift.detectAndCompute(self.I2, None)
-        kp1 = np.array([kp.pt for kp in kp1])
-        kp2 = np.array([kp.pt for kp in kp2])
+        kp1, desc1 = self.get_keypoints(self.I1)
+        kp2, desc2 = self.get_keypoints(self.I2)
         print("  Done!")
 
         print("Matching features...")
@@ -137,28 +145,35 @@ class FeatureMatcher:
         uv2 = np.vstack([matches[:, 2:4].T, np.ones(matches.shape[0])])
         xy1 = self.__project(uv1)
         xy2 = self.__project(uv2)
-        X, E, _, uv_inliers = self.ransac.run(xy1, xy2, uv1, uv2, self.K)
+        X, E, _, uv_inliers, inlier_set = self.ransac.run(xy1, xy2, uv1, uv2, self.K)
         F = self.K_inv.T @ E @ self.K_inv
-        print("  Done! Drawing point cloud...")
+        print("  Done!")
 
-        draw_point_cloud(
-            X, self.I1P, uv_inliers[0], xlim=[-4, +4], ylim=[-4, +4], zlim=[2, 8]
-        )
+        print("Saving results...")
+        np.save("../localization/X", X)
+        np.save("../localization/desc", desc1[inlier_set, :])
 
-        plt.show()
         if do_assessment:
             print("Assess performance...")
+
+            draw_point_cloud(
+                X, self.I1P, uv_inliers[0], xlim=[-4, +4], ylim=[-4, +4], zlim=[2, 8]
+            )
+
+            plt.show()
+
             draw_correspondences(
                 self.I1P, self.I2P, uv_inliers[0], uv_inliers[1], F, sample_size=8
             )
             plt.show()
+
             self.assess_n_best_features(50, index_pairs, match_metric, kp1, kp2)
 
 
 if __name__ == "__main__":
 
-    image_one = "../data/IMG_8221.jpg"
-    image_two = "../data/IMG_8223.jpg"
+    image_one = "../data/undistorted/IMG_8221.jpg"
+    image_two = "../data/undistorted/IMG_8223.jpg"
 
     # You will want to pass other options to SIFT_create. See the documentation:
     # https://docs.opencv.org/4.x/d7/d60/classcv_1_1SIFT.html
@@ -167,8 +182,8 @@ if __name__ == "__main__":
     # "unique" (cross-check).
 
     # nfeatures, nOctaveLayers, contrastThreshold, edgeThreshold, sigma, max_ratio, unique
-    options = [30000, 4, 0.001, 5, 1.5, 0.9, False]
+    options = [30000, 4, 0.001, 5, 1.5, 0.9, True]
 
-    feature_matcher = FeatureMatcher(image_one, image_two, options)
+    feature_matcher = FeatureMatcher(options)
 
-    feature_matcher.run()
+    feature_matcher.run(image_one, image_two)

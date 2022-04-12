@@ -6,6 +6,7 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+from localize_camera import LocalizeCamera
 
 def draw_frame(ax, T, scale):
     X0 = T @ np.array((0, 0, 0, 1))
@@ -37,21 +38,18 @@ def draw_point_cloud(X, T_m2q, xlim, ylim, zlim, colors, marker_size, frame_size
 
 
 if __name__ == "__main__":
-    model = "../example_localization"
-    query = "../example_localization/query/IMG_8210"
+
+    query = "../data/undistorted/IMG_8210.jpg"
 
     # 3D points [4 x num_points].
-    X = np.loadtxt(f"{model}/X.txt")
+    X = np.load("../localization/X.npy")
 
-    # Model-to-query transformation.
-    # If you estimated the query-to-model transformation,
-    # then you need to take the inverse.
-    T_m2q = np.loadtxt(f"{query}_T_m2q.txt")
+    localize = LocalizeCamera(query, X)
+    localize.run()
 
-    # If you have colors for your point cloud model...
-    colors = np.loadtxt(f"{model}/c.txt")  # RGB colors [num_points x 3].
-    # ...otherwise...
-    # colors = np.zeros((X.shape[1], 3))
+    T_m2q = np.loadtxt("../localization/Tmq.txt")
+
+    colors = np.zeros((X.shape[1], 3))
 
     # These control the visible volume in the 3D point cloud plot.
     # You may need to adjust these if your model does not show up.
