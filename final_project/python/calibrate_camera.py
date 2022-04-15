@@ -9,7 +9,7 @@ from os.path import join, basename, realpath, dirname, exists, splitext
 class CameraCalibration:
     def __init__(self):
 
-        self.image_path_pattern = "../data/*.jpg"
+        self.image_path_pattern = "../data/calibration/*.jpg"
         self.output_folder = dirname(self.image_path_pattern)
 
         self.board_size = (

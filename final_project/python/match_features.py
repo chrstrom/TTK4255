@@ -67,7 +67,7 @@ class FeatureMatcher:
         self.max_ratio = opts[5]
         self.unique = opts[6]
 
-        self.K = np.loadtxt("/home/strom/TTK4255/final_project/data/calibration/K.txt")
+        self.K = np.loadtxt("/home/strom/TTK4255/final_project/data/undistorted/K.txt")
         self.K_inv = np.linalg.inv(self.K)
 
         self.sift = cv.SIFT_create(

@@ -5,9 +5,6 @@ import cv2 as cv
 import numpy as np
 from match_features import FeatureMatcher
 from matlab_inspired_interface import match_features
-from scipy.optimize import least_squares
-
-from hw5.common import rotate_x, rotate_y, rotate_z, project
 
 class LocalizeCamera():
     """
@@ -20,16 +17,11 @@ class LocalizeCamera():
         self.object_points = model.T[:, :3]
         self.model_desc = np.load("../localization/desc.npy")
         self.query = cv.imread(query, cv.IMREAD_GRAYSCALE)
-        self.K = np.loadtxt("../data/calibration/K.txt")
+        self.K = np.loadtxt("../data/undistorted/K.txt")
 
         options = [30000, 4, 0.001, 5, 1.5, 0.9, False]
         self.feature_matcher = FeatureMatcher(options)
 
-
-    def __project(self, X):
-        K_inv = np.linalg.inv(self.K)
-        X_tilde = K_inv @ X
-        return X_tilde / X_tilde[2, :]
 
     def run(self):
 
@@ -49,7 +41,7 @@ class LocalizeCamera():
 
         dist = np.zeros((1, 5))
     
-        success, rvecs, tvecs, inliers = cv.solvePnPRansac(object_points, image_points, self.K, dist, reprojectionError=10)
+        success, rvecs, tvecs, inliers = cv.solvePnPRansac(object_points, image_points, self.K, dist, reprojectionError=100)
 
         if not success:
             print("solvePnPRansac did not succeed...") 
@@ -62,14 +54,14 @@ class LocalizeCamera():
         T_hat = np.eye(4)
         R, _ = cv.Rodrigues(rvecs)
 
-        T_hat[:3, :3] = R
-        T_hat[:3, 3] = tvecs[0, :]
+        T_hat[:3, :3] = R.T
+        T_hat[:3, 3] = tvecs[:, 0]
 
         print(T_hat)
 
 
 
-        np.savetxt("../localization/Tmq.txt", T_hat)
+        np.savetxt("../localization/Tmq.txt", T_hat.T)
 
 
 if __name__ == "__main__":
