@@ -151,7 +151,7 @@ class FeatureMatcher:
 
         print("Saving results...")
         np.save("../localization/X", X)
-        np.save("../localization/desc", desc1[inlier_set, :])
+        np.save("../localization/desc", desc2[inlier_set, :])
 
         if do_assessment:
             print("Assess performance...")
@@ -172,8 +172,8 @@ class FeatureMatcher:
 
 if __name__ == "__main__":
 
-    image_one = "../data/undistorted/IMG_8221.jpg"
-    image_two = "../data/undistorted/IMG_8223.jpg"
+    image_one = "../data/undistorted/IMG_8210.jpg"
+    image_two = "../data/undistorted/IMG_8211.jpg"
 
     # You will want to pass other options to SIFT_create. See the documentation:
     # https://docs.opencv.org/4.x/d7/d60/classcv_1_1SIFT.html
@@ -186,4 +186,4 @@ if __name__ == "__main__":
 
     feature_matcher = FeatureMatcher(options)
 
-    feature_matcher.run(image_one, image_two)
+    feature_matcher.run(image_one, image_two, False)

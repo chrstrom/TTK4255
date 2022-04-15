@@ -5,6 +5,9 @@ import cv2 as cv
 import numpy as np
 from match_features import FeatureMatcher
 from matlab_inspired_interface import match_features
+from scipy.optimize import least_squares
+
+from hw5.common import rotate_x, rotate_y, rotate_z, project
 
 class LocalizeCamera():
     """
@@ -14,39 +17,59 @@ class LocalizeCamera():
 
     def __init__(self, query, model):
         
-        self.X = model[0:3, :].T
+        self.object_points = model.T[:, :3]
         self.model_desc = np.load("../localization/desc.npy")
         self.query = cv.imread(query, cv.IMREAD_GRAYSCALE)
         self.K = np.loadtxt("../data/calibration/K.txt")
 
-        options = [30000, 4, 0.001, 5, 1.5, 0.9, True]
+        options = [30000, 4, 0.001, 5, 1.5, 0.9, False]
         self.feature_matcher = FeatureMatcher(options)
+
+
+    def __project(self, X):
+        K_inv = np.linalg.inv(self.K)
+        X_tilde = K_inv @ X
+        return X_tilde / X_tilde[2, :]
 
     def run(self):
 
+        print("Detecting keypoints...")
         keypoints, desc = self.feature_matcher.get_keypoints(self.query)
-        index_pairs, match_metric = match_features(desc, self.model_desc, 0.9, True)
+        print("  Done!")
 
-        N = min(keypoints.shape[0], self.X.shape[0], index_pairs.shape[0])
+        print("Matching features...")
+        index_pairs, match_metric = match_features(
+            desc, self.model_desc, 0.9, True
+        )
 
-        kp_query = np.zeros((N, 2))
-        kp_model = np.zeros((N, 3))
+        print(f"  Done! Found {index_pairs.shape[0]} matching features")
 
-        for i in range(N):
-            kp_query[i, :] = keypoints[index_pairs[i, 0]]
-            kp_model[i, :] = self.X[index_pairs[i, 1]]
+        image_points = keypoints[index_pairs[:, 0]]
+        object_points = self.object_points[index_pairs[:, 1]]
+
+        dist = np.zeros((1, 5))
+    
+        success, rvecs, tvecs, inliers = cv.solvePnPRansac(object_points, image_points, self.K, dist, reprojectionError=10)
+
+        if not success:
+            print("solvePnPRansac did not succeed...") 
+            exit()
+
+        print(rvecs.shape)
+        print(tvecs.shape)
+        print(inliers.shape)   
+    
+        T_hat = np.eye(4)
+        R, _ = cv.Rodrigues(rvecs)
+
+        T_hat[:3, :3] = R
+        T_hat[:3, 3] = tvecs[0, :]
+
+        print(T_hat)
 
 
-        _, R_vec, t, inliers = cv.solvePnPRansac(kp_model, kp_query, self.K, np.zeros((1, 5)))
 
-        R, _ = cv.Rodrigues(R_vec)
-        t = t[:, 0]
-
-        T = np.eye(4)
-        T[:3, :3] = R
-        T[:3, -1] = t
-        
-        np.savetxt("../localization/Tmq.txt", T.T)
+        np.savetxt("../localization/Tmq.txt", T_hat)
 
 
 if __name__ == "__main__":
@@ -54,7 +77,7 @@ if __name__ == "__main__":
 
     model = np.load("../localization/X.npy")
 
-    query = "../data/undistorted/IMG_8210.jpg"
+    query = "../data/undistorted/IMG_8227.jpg"
 
     localize = LocalizeCamera(query, model)
     localize.run()

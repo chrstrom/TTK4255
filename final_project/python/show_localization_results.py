@@ -39,7 +39,7 @@ def draw_point_cloud(X, T_m2q, xlim, ylim, zlim, colors, marker_size, frame_size
 
 if __name__ == "__main__":
 
-    query = "../data/undistorted/IMG_8210.jpg"
+    query = "../data/undistorted/IMG_8230.jpg"
 
     # 3D points [4 x num_points].
     X = np.load("../localization/X.npy")
