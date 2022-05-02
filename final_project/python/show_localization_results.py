@@ -39,37 +39,67 @@ def draw_point_cloud(X, T_m2q, xlim, ylim, zlim, colors, marker_size, frame_size
 
 if __name__ == "__main__":
 
-    query = "../data/undistorted/IMG_8230.jpg"
+    img = 8223
+    query = f"../data/undistorted/IMG_{img}.jpg"
 
-    # 3D points [4 x num_points].
-    X = np.load("../localization/X.npy")
+    scaling = 4.55 / 2.25 # 4.55 is the actual length of the doors, 2.25 is the unscaled point cloud distance
 
-    localize = LocalizeCamera(query, X)
-    localize.run()
+    X = np.loadtxt("../localization/X_ivan.out")
+    desc = np.loadtxt("../localization/desc_ivan.out").astype("float32")
+    model = (X, desc)
 
-    T_m2q = np.loadtxt("../localization/Tmq.txt")
+    localize = LocalizeCamera(query, model)
+    #T_m2q, J = localize.run()
 
-    colors = np.zeros((X.shape[1], 3))
+    #          nf, ncx, ncy
+    sigmas1 = [50, 0.1, 0.1]
+    sigmas2 = [0.1, 50, 0.1]
+    sigmas3 = [0.1, 0.1, 50]
 
-    # These control the visible volume in the 3D point cloud plot.
-    # You may need to adjust these if your model does not show up.
-    xlim = [-10, +10]
-    ylim = [-10, +10]
-    zlim = [0, +20]
+    sigmas = sigmas3
 
-    frame_size = 1
-    marker_size = 5
+    VAR = localize.run_monte_carlo(500, sigmas) 
+    STD = np.sqrt(VAR)
 
-    plt.figure("3D point cloud", figsize=(6, 6))
-    draw_point_cloud(
-        X,
-        T_m2q,
-        xlim,
-        ylim,
-        zlim,
-        colors=colors,
-        marker_size=marker_size,
-        frame_size=frame_size,
-    )
-    plt.tight_layout()
-    plt.show()
+    # COV = np.linalg.inv(J.T @ J)
+    # STD = np.sqrt(np.diag(COV))
+
+    STD[:3] *= 180 / np.pi
+    STD[3:] *= (1000 * scaling)
+
+    print(f"\nImage: {img}")
+
+    print("Sigmas:")
+    print(f"  nf: {sigmas[0]}")
+    print(f"  ncx: {sigmas[1]}")
+    print(f"  ncy: {sigmas[2]}")
+
+    print("Standard deviation for rpy in deg")
+    print(STD[:3])
+    print("Standard deviation for xyz in mm")
+    print(STD[3:])
+
+    # colors = np.zeros((X.shape[1], 3))
+
+    # # These control the visible volume in the 3D point cloud plot.
+    # # You may need to adjust these if your model does not show up.
+    # xlim = [-10, +10]
+    # ylim = [-10, +10]
+    # zlim = [0, +20]
+
+    # frame_size = 1
+    # marker_size = 5
+
+    # plt.figure("3D point cloud", figsize=(6, 6))
+    # draw_point_cloud(
+    #     X,
+    #     T_m2q,
+    #     xlim,
+    #     ylim,
+    #     zlim,
+    #     colors=colors,
+    #     marker_size=marker_size,
+    #     frame_size=frame_size,
+    # )
+    # plt.tight_layout()
+    # plt.show()

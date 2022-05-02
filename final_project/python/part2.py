@@ -1,6 +1,9 @@
 import numpy as np
+import scipy.linalg as la
 import matplotlib.pyplot as plt
 from hw5.common import *
+from hw5.estimate_E_ransac import *
+from hw5.decompose_E import *
 from scipy.optimize import least_squares
 from match_features import FeatureMatcher
 from matlab_inspired_interface import match_features
@@ -48,48 +51,38 @@ def T_from_h(h):
 def resfun(h):
     T = T_from_h(h)
     u_hat = project(K, T@X)
-    N = u.shape[0]
-    M = u.shape[1]
+    N = uv1.shape[0]
+    M = uv1.shape[1]
     r = np.zeros(N*M)
     for i in range(M):
-        r[i] = u_hat[0, i] - u[0, i]
-        r[i+M] = u_hat[1, i] - u[1, i]
+        r[i] = u_hat[0, i] - uv1[0, i]
+        r[i+M] = u_hat[1, i] - uv1[1, i]
 
     return r
 
 
-# Tip: The solution from HW4 is inside common.py
-
-# K = np.loadtxt('../data/K.txt')
-# u = np.loadtxt('../data/platform_corners_image_minus_one.txt') #each column is (ui, vi).T 
-# X = np.loadtxt('../data/platform_corners_metric_minus_one.txt') # each column is (X Y 0 1).T
-# I = plt.imread('../data/img_sequence/video0000.jpg') # Only used for plotting
-
 K = np.loadtxt("../data/calibration/K.txt")
-XM = np.load("../localization/X.npy")
-I = plt.imread("../data/undistorted/IMG_8210.jpg") 
-model_desc = np.load("../localization/desc.npy")
+K_inv = la.inv(K)
+
+XM = np.loadtxt("../localization/X_ivan.out")
+model_desc = np.loadtxt("../localization/desc_ivan.out").astype("float32")
+I = plt.imread("../data/undistorted/IMG_8214.jpg") 
+
 options = [30000, 4, 0.001, 5, 1.5, 0.9, True]
 feature_matcher = FeatureMatcher(options)
-
 
 keypoints, desc = feature_matcher.get_keypoints(I)
 index_pairs, match_metric = match_features(desc, model_desc, 0.9, True)
 N = min(keypoints.shape[0], XM.shape[1], index_pairs.shape[0])
 
-u = np.zeros((N, 2))
-X = np.zeros((N, 4))
-for i in range(N):
-    u[i, :] = keypoints[index_pairs[i, 0]]
-    X[i, :] = XM.T[index_pairs[i, 1]]
+u = keypoints[index_pairs[:N, 0]].T
+X = XM.T[index_pairs[:N, 1]].T
 
-
-# Task 2.1 (from HW4)
-u = u.T
-X = X.T
 uv1 = np.vstack((u, np.ones(u.shape[1])))
+uvw = K @ X[:3, :]
+uv2 = uvw / uvw[2, :]
 
-xy_tilde = np.linalg.inv(K) @ uv1
+xy_tilde = K_inv @ uv1
 xy = xy_tilde / xy_tilde[2,:]
 xy = xy_tilde[:2, :]
 XY = X[:2, :]
@@ -98,16 +91,45 @@ H = estimate_H(xy, XY)
 
 T1, T2 = decompose_H(H)
 translation_z = T1[2, 3]
-T_linear = T1 if translation_z < 0 else T2
+T_linear = T1 if translation_z > 0 else T2
 R0 = np.eye(4)
 R0[:3, :3] = T_linear[:3, :3]
 
 x0 = np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
 h = least_squares(resfun, x0, method='lm').x
 
-T_hat = T_from_h(h).T
+T_hat = T_from_h(h)
 
-colors = np.zeros((X.shape[1], 3))
+T_mq = np.eye(4)
+T_mq[:3, :3] = T_hat[:3, :3].T
+T_mq[:3, -1] = T_hat[:3, -1]
+print(T_mq)
+
+## RANSAC
+xy1 = project(K_inv, uv1)
+xy2 = project(K_inv, uv2)
+
+distance_threshold = 4
+inlier_fraction = 0.5
+success_probability = 0.99
+num_trials = np.ceil(np.log(1 - success_probability) / np.log(1 - inlier_fraction ** 8))
+inlier_set = estimate_E_ransac(xy1, xy2, uv1, uv2, K, distance_threshold, int(num_trials))
+
+uv1_in = uv1[:, inlier_set]
+xy1_in = xy1[:, inlier_set]
+xy2_in = xy2[:, inlier_set]
+
+
+E = estimate_E(xy1_in, xy2_in).reshape((3, 3))
+TS = decompose_E(E)
+
+T_qm = TS[2]
+
+T_mq = np.eye(4)
+T_mq[:3, :3] = T_qm[:3, :3].T
+T_mq[:3, -1] = -T_qm[:3, -1]
+
+colors = I[uv1[1,:].astype(np.int32), uv1[0,:].astype(np.int32), :]
 
 # These control the visible volume in the 3D point cloud plot.
 # You may need to adjust these if your model does not show up.
@@ -121,7 +143,7 @@ marker_size = 5
 plt.figure("3D point cloud", figsize=(6, 6))
 draw_point_cloud(
     X,
-    T_hat,
+    T_mq,
     xlim,
     ylim,
     zlim,
