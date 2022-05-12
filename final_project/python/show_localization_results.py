@@ -48,58 +48,51 @@ if __name__ == "__main__":
     desc = np.loadtxt("../localization/desc_ivan.out").astype("float32")
     model = (X, desc)
 
+    run_monte_carlo = False
     localize = LocalizeCamera(query, model)
-    #T_m2q, J = localize.run()
 
-    #          nf, ncx, ncy
-    sigmas1 = [50, 0.1, 0.1]
-    sigmas2 = [0.1, 50, 0.1]
-    sigmas3 = [0.1, 0.1, 50]
+    if run_monte_carlo:
+        #          nf, ncx, ncy
+        sigmas1 = [50, 0.1, 0.1]
+        sigmas2 = [0.1, 50, 0.1]
+        sigmas3 = [0.1, 0.1, 50]
 
-    sigmas = sigmas3
+        sigmas = sigmas3
+        COV = localize.run_monte_carlo(500, sigmas) 
 
-    VAR = localize.run_monte_carlo(500, sigmas) 
-    STD = np.sqrt(VAR)
+        print("Sigmas:")
+        print(f"  nf: {sigmas[0]}")
+        print(f"  ncx: {sigmas[1]}")
+        print(f"  ncy: {sigmas[2]}")
 
-    # COV = np.linalg.inv(J.T @ J)
-    # STD = np.sqrt(np.diag(COV))
+    else:
+        _, J, T_m2q = localize.run()
 
+        COV = np.linalg.inv(J.T @ J)
+        
+    STD = np.sqrt(np.diag(COV))
     STD[:3] *= 180 / np.pi
     STD[3:] *= (1000 * scaling)
 
+
     print(f"\nImage: {img}")
-
-    print("Sigmas:")
-    print(f"  nf: {sigmas[0]}")
-    print(f"  ncx: {sigmas[1]}")
-    print(f"  ncy: {sigmas[2]}")
-
     print("Standard deviation for rpy in deg")
     print(STD[:3])
     print("Standard deviation for xyz in mm")
     print(STD[3:])
 
-    # colors = np.zeros((X.shape[1], 3))
+    colors = localize.get_colors()
 
-    # # These control the visible volume in the 3D point cloud plot.
-    # # You may need to adjust these if your model does not show up.
-    # xlim = [-10, +10]
-    # ylim = [-10, +10]
-    # zlim = [0, +20]
-
-    # frame_size = 1
-    # marker_size = 5
-
-    # plt.figure("3D point cloud", figsize=(6, 6))
-    # draw_point_cloud(
-    #     X,
-    #     T_m2q,
-    #     xlim,
-    #     ylim,
-    #     zlim,
-    #     colors=colors,
-    #     marker_size=marker_size,
-    #     frame_size=frame_size,
-    # )
-    # plt.tight_layout()
-    # plt.show()
+    plt.figure("3D point cloud", figsize=(6, 6))
+    draw_point_cloud(
+        X,
+        T_m2q,
+        xlim=[-10, +10],
+        ylim=[-10, +10],
+        zlim=[0, +20],
+        colors=colors,
+        marker_size=5,
+        frame_size=1,
+    )
+    plt.tight_layout()
+    plt.show()
